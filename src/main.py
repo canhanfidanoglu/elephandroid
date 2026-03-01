@@ -22,6 +22,8 @@ from src.meetings.routes import router as meetings_router
 from src.teams_chat.routes import router as teams_chat_router
 from src.bot.routes import router as bot_router
 from src.wizard.routes import router as wizard_router
+from src.billing.routes import router as billing_router
+from src.teams_bot.routes import router as teams_bot_router
 
 # ── Logging ──────────────────────────────────────────────────────────
 
@@ -124,6 +126,8 @@ app.include_router(meetings_router)
 app.include_router(teams_chat_router)
 app.include_router(bot_router)
 app.include_router(wizard_router)
+app.include_router(billing_router)
+app.include_router(teams_bot_router)
 
 
 # ── Root ─────────────────────────────────────────────────────────────

@@ -15,6 +15,7 @@ from src.database import Base
 # Import all models so Base.metadata is fully populated
 import src.auth.models  # noqa: F401
 import src.chat.models  # noqa: F401
+import src.billing.models  # noqa: F401
 
 config = context.config
 

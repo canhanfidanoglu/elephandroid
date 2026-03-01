@@ -50,9 +50,14 @@ class Settings(BaseSettings):
     acs_connection_string: str = ""
     acs_callback_url: str = "http://localhost:8000/bot/callbacks"
 
+    # Teams Bot (Azure Bot Service)
+    bot_app_id: str = ""
+    bot_app_password: str = ""
+
     # Qdrant (vector store)
     qdrant_url: str = "http://localhost:6333"
     qdrant_collection: str = "elephandroid_docs"
+    qdrant_hybrid_search: bool = True
 
     # Embedding
     ollama_embed_model: str = "nomic-embed-text"
@@ -60,6 +65,12 @@ class Settings(BaseSettings):
     # Chat
     chat_max_history: int = 20
     chat_context_chunks: int = 5
+
+    # Stripe
+    stripe_api_key: str = ""
+    stripe_webhook_secret: str = ""
+    stripe_pro_price_id: str = ""
+    stripe_enterprise_price_id: str = ""
 
     # CORS
     cors_origins: list[str] = ["*"]

@@ -19,7 +19,7 @@ dependencies = [
     "python-pptx>=0.6.23",
     "python-docx>=1.1.0",
     "pymupdf>=1.24.0",
-    "qdrant-client>=1.9.0",
+    "qdrant-client>=1.12.0",
     "alembic>=1.18.0",
 ]
 
@@ -29,7 +29,9 @@ claude = ["anthropic>=0.40.0"]
 openai = ["openai>=1.50.0"]
 gemini = ["google-genai>=1.0.0"]
 acs = ["azure-communication-callautomation>=1.4.0"]
-all = ["asyncpg>=0.30.0", "anthropic>=0.40.0", "openai>=1.50.0", "google-genai>=1.0.0", "azure-communication-callautomation>=1.4.0"]
+stripe = ["stripe>=11.0.0"]
+botframework = ["botbuilder-core>=4.16.0", "botbuilder-integration-aiohttp>=4.16.0"]
+all = ["asyncpg>=0.30.0", "anthropic>=0.40.0", "openai>=1.50.0", "google-genai>=1.0.0", "azure-communication-callautomation>=1.4.0", "stripe>=11.0.0", "botbuilder-core>=4.16.0", "botbuilder-integration-aiohttp>=4.16.0"]
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.24.0",

@@ -76,6 +76,16 @@ services:
       qdrant-prod:
         condition: service_started
 
+  # ── Frontend ──────────────────────────────────────
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://app:8000
+    depends_on:
+      - app
+
 volumes:
   db-data:
   ollama-data:

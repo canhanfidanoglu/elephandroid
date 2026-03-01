@@ -4,6 +4,9 @@ __pycache__/
 dist/
 build/
 .env
+.env.*
+!.env.example
+!.env.*.example
 *.db
 *.sqlite
 .venv/
@@ -17,3 +20,19 @@ venv/
 data/
 *.log
 .DS_Store
+
+# Frontend (Next.js)
+frontend/node_modules/
+frontend/.next/
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+terraform.tfvars
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
