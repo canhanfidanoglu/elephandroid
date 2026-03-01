@@ -1,0 +1,39 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+.mypy_cache
+.ruff_cache
+
+# Virtual env
+.venv
+venv
+env
+
+# IDE
+.vscode
+.idea
+*.swp
+
+# Local data
+*.db
+*.sqlite3
+elephandroid.db
+
+# Env (secrets!)
+.env
+
+# Docker
+docker-compose*.yml
+Dockerfile
+
+# Docs / misc
+*.md
+LICENSE
+.claude
+tests

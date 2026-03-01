@@ -1,0 +1,2397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elephandroid</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; color: #333; }
+        .container { max-width: 820px; margin: 40px auto; padding: 0 20px; }
+        h1 { font-size: 1.8rem; margin-bottom: 8px; }
+        .subtitle { color: #666; margin-bottom: 32px; }
+        .card { background: #fff; border-radius: 8px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .card h2 { font-size: 1.1rem; margin-bottom: 16px; }
+        .btn { display: inline-block; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 500; cursor: pointer; border: none; font-size: 0.95rem; }
+        .btn-primary { background: #0078d4; color: #fff; }
+        .btn-primary:hover { background: #006bc1; }
+        .btn-danger { background: #d13438; color: #fff; }
+        .btn-submit { background: #107c10; color: #fff; }
+        .btn-submit:hover { background: #0e6b0e; }
+        .btn-secondary { background: #ededed; color: #333; }
+        .btn-secondary:hover { background: #ddd; }
+        label { display: block; font-weight: 500; margin-bottom: 4px; margin-top: 12px; }
+        select, input[type="file"], input[type="text"], textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.95rem; font-family: inherit; }
+        textarea { resize: vertical; min-height: 120px; }
+        .status { margin-top: 16px; padding: 12px; border-radius: 4px; display: none; }
+        .status.success { background: #dff6dd; color: #107c10; display: block; }
+        .status.error { background: #fde7e9; color: #d13438; display: block; }
+        .status.warning { background: #fff4ce; color: #8a6d3b; display: block; }
+        .actions { margin-top: 8px; }
+        pre { white-space: pre-wrap; font-size: 0.85rem; margin-top: 8px; }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 0; border-bottom: 2px solid #ddd; margin-bottom: 20px; }
+        .tab-btn { padding: 10px 20px; cursor: pointer; border: none; background: none; font-size: 0.95rem; font-weight: 500; color: #666; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
+        .tab-btn:hover { color: #333; }
+        .tab-btn.active { color: #0078d4; border-bottom-color: #0078d4; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Health dot */
+        .health-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+        .health-dot.ok { background: #107c10; }
+        .health-dot.fail { background: #d13438; }
+        .health-dot.unknown { background: #999; }
+
+        /* Preview table */
+        .preview-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.85rem; }
+        .preview-table th, .preview-table td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
+        .preview-table th { background: #f5f5f5; font-weight: 600; }
+        .preview-table tr:nth-child(even) { background: #fafafa; }
+
+        .inline-label { display: inline; font-weight: normal; cursor: pointer; }
+        .hint { color: #888; font-size: 0.85rem; display: block; margin-top: 2px; }
+
+        /* Chat */
+        .chat-layout { display: flex; gap: 16px; min-height: 520px; }
+        .chat-sidebar { width: 220px; flex-shrink: 0; background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 12px; display: flex; flex-direction: column; }
+        .chat-sidebar .new-chat-btn { width: 100%; padding: 8px; border: 1px dashed #0078d4; background: none; color: #0078d4; border-radius: 6px; cursor: pointer; font-weight: 500; margin-bottom: 8px; }
+        .chat-sidebar .new-chat-btn:hover { background: #f0f6ff; }
+        .session-list { flex: 1; overflow-y: auto; }
+        .session-item { padding: 8px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #555; }
+        .session-item:hover { background: #f0f0f0; }
+        .session-item.active { background: #e6f0fb; color: #0078d4; font-weight: 500; }
+        .chat-main { flex: 1; display: flex; flex-direction: column; background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 16px; }
+        .chat-msg { margin-bottom: 12px; max-width: 80%; }
+        .chat-msg.user { margin-left: auto; }
+        .chat-msg.assistant { margin-right: auto; }
+        .chat-msg .bubble { padding: 10px 14px; border-radius: 12px; font-size: 0.9rem; line-height: 1.5; word-wrap: break-word; }
+        .chat-msg.user .bubble { background: #0078d4; color: #fff; border-bottom-right-radius: 4px; }
+        .chat-msg.assistant .bubble { background: #f0f0f0; color: #333; border-bottom-left-radius: 4px; }
+        .chat-msg.assistant .bubble strong { font-weight: 600; }
+        .chat-msg.assistant .bubble code { background: #e0e0e0; padding: 1px 4px; border-radius: 3px; font-size: 0.85em; }
+        .chat-msg.assistant .bubble pre { background: #e0e0e0; padding: 8px; border-radius: 4px; overflow-x: auto; margin: 6px 0; }
+        .chat-msg.assistant .bubble pre code { background: none; padding: 0; }
+        .chat-input-bar { display: flex; gap: 8px; padding: 12px; border-top: 1px solid #eee; }
+        .chat-input-bar input[type="text"] { flex: 1; }
+        .chat-input-bar .upload-btn { background: none; border: 1px solid #ccc; border-radius: 4px; padding: 6px 10px; cursor: pointer; font-size: 1.1rem; }
+        .chat-input-bar .upload-btn:hover { background: #f5f5f5; }
+        .chat-empty { text-align: center; color: #999; margin-top: 100px; }
+        .task-approval-box { margin-top: 10px; padding: 12px; background: #fafafa; border: 1px solid #ddd; border-radius: 6px; }
+        .task-approval-box .approval-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+        /* Meetings */
+        .meeting-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px 16px; margin-bottom: 10px; cursor: pointer; transition: border-color 0.2s; }
+        .meeting-card:hover { border-color: #0078d4; }
+        .meeting-card.selected { border-color: #0078d4; background: #f0f6ff; }
+        .meeting-card .meeting-subject { font-weight: 600; font-size: 0.95rem; }
+        .meeting-card .meeting-meta { font-size: 0.8rem; color: #666; margin-top: 4px; }
+        .meeting-detail { background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .meeting-summary-box { background: #fafafa; border: 1px solid #e0e0e0; border-radius: 6px; padding: 16px; margin-top: 12px; line-height: 1.6; }
+        .meeting-summary-box h4 { margin: 12px 0 6px; font-size: 0.95rem; }
+        .meeting-summary-box ul { margin: 4px 0 8px 20px; }
+        .meeting-summary-box li { margin-bottom: 4px; font-size: 0.9rem; }
+
+        /* NL Report */
+        .nl-report-box { background: #fafafa; border: 1px solid #e0e0e0; border-radius: 6px; padding: 16px; margin-top: 12px; line-height: 1.6; font-size: 0.9rem; white-space: pre-wrap; }
+        .nl-report-box strong { font-weight: 600; }
+
+        /* Wizard */
+        .wizard-source-list { list-style: none; padding: 0; margin: 8px 0; }
+        .wizard-source-list li { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: #f0f6ff; border: 1px solid #cce0ff; border-radius: 4px; margin-bottom: 6px; font-size: 0.85rem; }
+        .wizard-source-list li .remove-src { cursor: pointer; color: #d13438; font-weight: bold; margin-left: auto; }
+
+        /* Bot controls */
+        .bot-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px 16px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .bot-card .bot-info { font-size: 0.85rem; color: #555; }
+        .bot-card .bot-status { font-weight: 600; font-size: 0.8rem; }
+        .bot-card .bot-status.active { color: #107c10; }
+
+        /* Chat plan selector */
+        .chat-plan-bar { display: flex; gap: 8px; padding: 8px 12px; border-bottom: 1px solid #eee; align-items: center; font-size: 0.85rem; }
+        .chat-plan-bar select { font-size: 0.85rem; padding: 4px 6px; border-radius: 4px; border: 1px solid #ccc; }
+        .chat-plan-bar label { margin: 0; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Elephandroid</h1>
+    <p class="subtitle">Enterprise Automation &mdash; Excel Sync &bull; AI Extractor &bull; Reports &bull; Meetings &bull; Chat &bull; Email &amp; Chat &bull; Wizard</p>
+
+    {% if not user_id %}
+    <div class="card">
+        <h2>Get started</h2>
+        <p>Sign in with your Microsoft 365 account to begin syncing tasks.</p>
+        <div class="actions" style="margin-top:16px">
+            <a href="/auth/login" class="btn btn-primary">Sign in with Microsoft</a>
+        </div>
+    </div>
+    {% else %}
+    <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+            <h2>Signed in</h2>
+            <a href="/auth/logout" class="btn btn-danger">Sign out</a>
+        </div>
+    </div>
+
+    <!-- Tab bar -->
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="excel">Excel Sync</button>
+        <button class="tab-btn" data-tab="ai">AI Extractor</button>
+        <button class="tab-btn" data-tab="reports">Reports</button>
+        <button class="tab-btn" data-tab="chat">Chat</button>
+        <button class="tab-btn" data-tab="meetings">Meetings</button>
+        <button class="tab-btn" data-tab="emailchat">Email &amp; Chat</button>
+        <button class="tab-btn" data-tab="wizard">Wizard</button>
+    </div>
+
+    <!-- ==================== EXCEL SYNC TAB ==================== -->
+    <div id="tab-excel" class="tab-content active">
+        <div class="card">
+            <h2>Sync Excel to Planner</h2>
+
+            <label for="excel_group_id">Group</label>
+            <select id="excel_group_id"><option value="">Loading groups...</option></select>
+
+            <label for="excel_plan_id">Plan</label>
+            <select id="excel_plan_id"><option value="">Select a group first</option></select>
+
+            <label for="excel_bucket_id">Default Bucket</label>
+            <select id="excel_bucket_id"><option value="">Select a plan first</option></select>
+
+            <label for="excel_file">Excel File (.xlsx)</label>
+            <input type="file" id="excel_file" accept=".xlsx,.xls">
+
+            <div style="margin-top:12px">
+                <label class="inline-label">
+                    <input type="checkbox" id="sheet_as_bucket"> Use sheet names as buckets
+                </label>
+                <span class="hint">Each sheet becomes a separate bucket. Buckets not found in the plan are ignored.</span>
+            </div>
+
+            <div class="actions" style="margin-top:20px">
+                <button class="btn btn-submit" onclick="syncExcel()">Sync to Planner</button>
+            </div>
+
+            <div id="excelStatus" class="status"></div>
+            <pre id="excelResults"></pre>
+        </div>
+    </div>
+
+    <!-- ==================== AI EXTRACTOR TAB ==================== -->
+    <div id="tab-ai" class="tab-content">
+        <div class="card">
+            <h2>AI Task Extractor</h2>
+            <p style="margin-bottom:12px">
+                <span id="llmHealthDot" class="health-dot unknown"></span>
+                <span id="llmHealthText">Checking LLM...</span>
+            </p>
+
+            <label for="ai_input_mode">Input Mode</label>
+            <select id="ai_input_mode">
+                <option value="text">Free-form Text</option>
+                <option value="file">Upload Document (.txt, .docx, .pdf)</option>
+            </select>
+
+            <div id="ai_text_input">
+                <label for="ai_text">Meeting Notes / Requirements</label>
+                <textarea id="ai_text" placeholder="Paste your meeting notes, brainstorm, or requirements here..."></textarea>
+            </div>
+
+            <div id="ai_file_input" style="display:none">
+                <label for="ai_file">Document File</label>
+                <input type="file" id="ai_file" accept=".txt,.docx,.pdf">
+            </div>
+
+            <label for="ai_context">Context (optional)</label>
+            <input type="text" id="ai_context" placeholder="e.g. Q1 product sprint, mobile app redesign">
+
+            <label for="ai_prefix">Ticket Prefix</label>
+            <input type="text" id="ai_prefix" value="AI" style="width:100px">
+
+            <div class="actions" style="margin-top:20px">
+                <button class="btn btn-primary" onclick="extractTasks()">Extract Tasks (Preview)</button>
+            </div>
+
+            <div id="aiExtractStatus" class="status"></div>
+            <div id="aiPreview" style="display:none;margin-top:16px">
+                <h3 style="font-size:1rem;margin-bottom:8px">Extracted Tasks Preview</h3>
+                <div style="overflow-x:auto">
+                    <table class="preview-table" id="aiPreviewTable">
+                        <thead>
+                            <tr>
+                                <th>Ticket</th>
+                                <th>Title</th>
+                                <th>Epic</th>
+                                <th>Bucket</th>
+                                <th>Priority</th>
+                                <th>Assignee</th>
+                                <th>Due Date</th>
+                                <th>Checklist</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <hr style="margin:20px 0;border:none;border-top:1px solid #ddd">
+                <h3 style="font-size:1rem;margin-bottom:8px">Sync to Planner</h3>
+
+                <label for="ai_group_id">Group</label>
+                <select id="ai_group_id"><option value="">Loading groups...</option></select>
+
+                <label for="ai_plan_id">Plan</label>
+                <select id="ai_plan_id"><option value="">Select a group first</option></select>
+
+                <div style="margin-top:12px">
+                    <label class="inline-label">
+                        <input type="checkbox" id="ai_auto_plan" checked> Auto-create new plan
+                    </label>
+                </div>
+
+                <div id="ai_plan_title_row" style="margin-top:8px">
+                    <label for="ai_plan_title">Plan Title</label>
+                    <input type="text" id="ai_plan_title" placeholder="Will use AI-suggested name if empty">
+                </div>
+
+                <div style="margin-top:12px">
+                    <label class="inline-label">
+                        <input type="checkbox" id="ai_auto_buckets" checked> Auto-create buckets
+                    </label>
+                    <span class="hint">Missing buckets will be created automatically in Planner.</span>
+                </div>
+
+                <div class="actions" style="margin-top:20px">
+                    <button class="btn btn-submit" onclick="syncAiTasks()">Sync to Planner</button>
+                </div>
+
+                <div id="aiSyncStatus" class="status"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== REPORTS TAB ==================== -->
+    <div id="tab-reports" class="tab-content">
+        <div class="card">
+            <h2>Plan Progress Reports</h2>
+
+            <label for="rpt_group_id">Group</label>
+            <select id="rpt_group_id"><option value="">Loading groups...</option></select>
+
+            <label for="rpt_plan_id">Plan</label>
+            <select id="rpt_plan_id"><option value="">Select a group first</option></select>
+
+            <label>Format</label>
+            <div style="margin-top:4px">
+                <label class="inline-label" style="margin-right:16px">
+                    <input type="radio" name="rpt_format" value="pptx" checked> PPTX (Presentation)
+                </label>
+                <label class="inline-label">
+                    <input type="radio" name="rpt_format" value="docx"> DOCX (Document)
+                </label>
+            </div>
+
+            <div class="actions" style="margin-top:20px">
+                <button class="btn btn-submit" onclick="downloadReport()">Download Report</button>
+                <button class="btn btn-secondary" onclick="previewReport()" style="margin-left:8px">Preview JSON</button>
+            </div>
+
+            <div id="rptStatus" class="status"></div>
+            <pre id="rptResults"></pre>
+        </div>
+
+        <div class="card">
+            <h2>Natural Language Report</h2>
+            <p style="margin-bottom:12px;color:#666">Ask a question about your plan and get an AI-generated report streamed back.</p>
+
+            <label for="nl_group_id">Group</label>
+            <select id="nl_group_id"><option value="">Loading groups...</option></select>
+
+            <label for="nl_plan_id">Plan</label>
+            <select id="nl_plan_id"><option value="">Select a group first</option></select>
+
+            <label for="nl_query">Your Question</label>
+            <textarea id="nl_query" style="min-height:60px" placeholder="e.g. Bu haftaki ilerleme nasil? / List overdue tasks and blockers / Give me a summary for the weekly standup"></textarea>
+
+            <div class="actions" style="margin-top:16px">
+                <button class="btn btn-primary" onclick="generateNLReport()">Generate Report</button>
+            </div>
+
+            <div id="nlStatus" class="status"></div>
+            <div id="nlReportResult" class="nl-report-box" style="display:none"></div>
+        </div>
+    </div>
+
+    <!-- ==================== MEETINGS TAB ==================== -->
+    <div id="tab-meetings" class="tab-content">
+        <div class="card">
+            <h2>Meeting Bot</h2>
+            <p style="margin-bottom:12px;color:#666">Join a Teams meeting with an AI bot that captures real-time transcription.</p>
+
+            <label for="bot_join_url">Meeting Join URL</label>
+            <input type="text" id="bot_join_url" placeholder="Paste the Teams meeting join link here...">
+
+            <div class="actions" style="margin-top:12px">
+                <button class="btn btn-primary" onclick="botJoinMeeting()">Join Meeting</button>
+                <button class="btn btn-secondary" onclick="botLoadActive()" style="margin-left:8px">Refresh Active Calls</button>
+            </div>
+
+            <div id="botStatus" class="status"></div>
+            <div id="botActiveCalls" style="margin-top:12px"></div>
+        </div>
+
+        <div class="card">
+            <h2>Meeting Summaries</h2>
+            <p style="margin-bottom:12px;color:#666">Select a recent Teams meeting to fetch its transcript and generate a summary with task extraction.</p>
+
+            <div style="display:flex;gap:16px;align-items:end;margin-bottom:16px">
+                <div style="flex:1">
+                    <label for="mtg_after">After</label>
+                    <input type="date" id="mtg_after" style="width:100%">
+                </div>
+                <div style="flex:1">
+                    <label for="mtg_before">Before</label>
+                    <input type="date" id="mtg_before" style="width:100%">
+                </div>
+                <button class="btn btn-primary" onclick="loadMeetings()">Load Meetings</button>
+            </div>
+
+            <div id="mtgList"></div>
+            <div id="mtgStatus" class="status"></div>
+        </div>
+
+        <div id="mtgDetailPanel" style="display:none;margin-top:16px">
+            <div class="meeting-detail">
+                <h3 id="mtgDetailSubject"></h3>
+                <p id="mtgDetailMeta" style="color:#666;font-size:0.85rem;margin-bottom:12px"></p>
+
+                <div class="actions" style="margin-bottom:12px">
+                    <button class="btn btn-primary" onclick="summarizeMeeting()">Summarize + Extract Tasks</button>
+                    <button class="btn btn-secondary" onclick="importToChat()" style="margin-left:8px">Import to Chat</button>
+                </div>
+
+                <div id="mtgSummaryStatus" class="status"></div>
+
+                <div id="mtgSummaryResult" style="display:none">
+                    <div class="meeting-summary-box" id="mtgSummaryContent"></div>
+
+                    <div id="mtgTasksSection" style="display:none;margin-top:16px">
+                        <h3 style="font-size:1rem;margin-bottom:8px">Extracted Tasks</h3>
+                        <div style="overflow-x:auto">
+                            <table class="preview-table" id="mtgTasksTable">
+                                <thead><tr><th>Ticket</th><th>Title</th><th>Epic</th><th>Bucket</th><th>Priority</th><th>Assignee</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+
+                        <hr style="margin:16px 0;border:none;border-top:1px solid #ddd">
+                        <h3 style="font-size:1rem;margin-bottom:8px">Sync to Planner</h3>
+
+                        <label for="mtg_group_id">Group</label>
+                        <select id="mtg_group_id"><option value="">Loading groups...</option></select>
+
+                        <label for="mtg_plan_id">Plan</label>
+                        <select id="mtg_plan_id"><option value="">Select a group first</option></select>
+
+                        <label for="mtg_bucket_id">Default Bucket</label>
+                        <select id="mtg_bucket_id"><option value="">Select a plan first</option></select>
+
+                        <div class="actions" style="margin-top:16px">
+                            <button class="btn btn-submit" onclick="syncMeetingTasks()">Sync to Planner</button>
+                        </div>
+                        <div id="mtgSyncStatus" class="status"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== CHAT TAB ==================== -->
+    <div id="tab-chat" class="tab-content">
+        <div class="chat-layout">
+            <div class="chat-sidebar">
+                <button class="new-chat-btn" onclick="createChatSession()">+ New Chat</button>
+                <div class="session-list" id="chatSessionList"></div>
+            </div>
+            <div class="chat-main">
+                <div class="chat-plan-bar">
+                    <label for="chat_group_id">Group:</label>
+                    <select id="chat_group_id" style="width:160px"><option value="">No group</option></select>
+                    <label for="chat_plan_id">Plan:</label>
+                    <select id="chat_plan_id" style="width:180px"><option value="">No plan (chat only)</option></select>
+                    <span id="chatPlanHint" style="color:#888;font-size:0.8rem">Select a plan for task management via chat</span>
+                </div>
+                <div class="chat-messages" id="chatMessages">
+                    <div class="chat-empty" id="chatEmpty">Select or create a chat session to begin.</div>
+                </div>
+                <div class="chat-input-bar">
+                    <input type="file" id="chatFileInput" style="display:none" accept=".txt,.docx,.pdf">
+                    <button class="upload-btn" title="Upload document" onclick="document.getElementById('chatFileInput').click()">&#128206;</button>
+                    <input type="text" id="chatInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendChatMessage()">
+                    <button class="btn btn-primary" onclick="sendChatMessage()">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== EMAIL & CHAT TAB ==================== -->
+    <div id="tab-emailchat" class="tab-content">
+        <div class="card">
+            <h2>Email &amp; Chat Task Extraction</h2>
+            <p style="margin-bottom:12px;color:#666">Extract tasks from Outlook emails, Teams chat conversations, or pasted text.</p>
+
+            <label for="ec_source">Source</label>
+            <select id="ec_source">
+                <option value="outlook">Outlook Inbox</option>
+                <option value="teams">Teams Chat</option>
+                <option value="paste">Paste Text</option>
+            </select>
+
+            <!-- Outlook source -->
+            <div id="ec_outlook_section">
+                <div style="display:flex;gap:12px;align-items:end;margin-top:12px;flex-wrap:wrap">
+                    <div style="flex:1;min-width:140px">
+                        <label for="ec_email_after">After</label>
+                        <input type="date" id="ec_email_after" style="width:100%">
+                    </div>
+                    <div style="flex:1;min-width:140px">
+                        <label for="ec_email_before">Before</label>
+                        <input type="date" id="ec_email_before" style="width:100%">
+                    </div>
+                    <div style="flex:2;min-width:180px">
+                        <label for="ec_email_search">Search</label>
+                        <input type="text" id="ec_email_search" placeholder="Subject or keyword..." style="width:100%">
+                    </div>
+                    <button class="btn btn-primary" onclick="loadInbox()">Load Inbox</button>
+                </div>
+                <div id="ecInboxList" style="margin-top:12px"></div>
+                <div id="ecInboxStatus" class="status"></div>
+            </div>
+
+            <!-- Teams Chat source -->
+            <div id="ec_teams_section" style="display:none">
+                <div style="display:flex;gap:12px;align-items:end;margin-top:12px;flex-wrap:wrap">
+                    <div style="flex:1;min-width:140px">
+                        <label for="ec_chat_type">Chat Type</label>
+                        <select id="ec_chat_type" style="width:100%">
+                            <option value="">All</option>
+                            <option value="oneOnOne">One-on-One</option>
+                            <option value="group">Group</option>
+                            <option value="meeting">Meeting</option>
+                        </select>
+                    </div>
+                    <div style="flex:2;min-width:180px">
+                        <label for="ec_chat_search">Search by topic</label>
+                        <input type="text" id="ec_chat_search" placeholder="Chat name or topic..." style="width:100%">
+                    </div>
+                    <button class="btn btn-primary" onclick="loadTeamsChats()">Load Chats</button>
+                </div>
+                <div id="ecChatList" style="margin-top:12px"></div>
+                <div id="ecChatMessages" style="display:none;margin-top:12px;max-height:300px;overflow-y:auto;background:#fafafa;border:1px solid #e0e0e0;border-radius:6px;padding:12px;font-size:0.85rem;line-height:1.6"></div>
+                <div id="ecChatStatus" class="status"></div>
+            </div>
+
+            <!-- Paste text source -->
+            <div id="ec_paste_section" style="display:none">
+                <label for="ec_paste_subject" style="margin-top:12px">Subject (optional)</label>
+                <input type="text" id="ec_paste_subject" placeholder="e.g. Email subject or chat topic">
+                <label for="ec_paste_body">Content</label>
+                <textarea id="ec_paste_body" placeholder="Paste your email content, chat messages, or any text here..."></textarea>
+            </div>
+
+            <div id="ec_attachments_option" style="margin-top:12px">
+                <label class="inline-label">
+                    <input type="checkbox" id="ec_include_attachments"> Include attachments in extraction (DOCX, PDF, etc.)
+                </label>
+            </div>
+
+            <div class="actions" style="margin-top:16px">
+                <button class="btn btn-primary" onclick="ecExtractTasks()">Extract Tasks</button>
+            </div>
+            <div id="ecExtractStatus" class="status"></div>
+        </div>
+
+        <!-- Task preview + sync -->
+        <div id="ecPreview" style="display:none;margin-top:16px">
+            <div class="card">
+                <h3 style="font-size:1rem;margin-bottom:8px">Extracted Tasks Preview</h3>
+                <div style="overflow-x:auto">
+                    <table class="preview-table" id="ecPreviewTable">
+                        <thead>
+                            <tr>
+                                <th>Ticket</th><th>Title</th><th>Epic</th><th>Bucket</th>
+                                <th>Priority</th><th>Assignee</th><th>Due Date</th><th>Checklist</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <hr style="margin:20px 0;border:none;border-top:1px solid #ddd">
+                <h3 style="font-size:1rem;margin-bottom:8px">Sync to Planner</h3>
+
+                <label for="ec_group_id">Group</label>
+                <select id="ec_group_id"><option value="">Loading groups...</option></select>
+
+                <label for="ec_plan_id">Plan</label>
+                <select id="ec_plan_id"><option value="">Select a group first</option></select>
+
+                <label for="ec_bucket_id">Default Bucket</label>
+                <select id="ec_bucket_id"><option value="">Select a plan first</option></select>
+
+                <div style="margin-top:12px">
+                    <label class="inline-label">
+                        <input type="checkbox" id="ec_auto_buckets" checked> Auto-create buckets
+                    </label>
+                </div>
+
+                <div class="actions" style="margin-top:16px">
+                    <button class="btn btn-submit" onclick="ecSyncTasks()">Sync to Planner</button>
+                    <button class="btn btn-secondary" onclick="ecImportToChat()" style="margin-left:8px">Import to Chat</button>
+                </div>
+                <div id="ecSyncStatus" class="status"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== WIZARD TAB ==================== -->
+    <div id="tab-wizard" class="tab-content">
+        <div class="card">
+            <h2>Project Wizard</h2>
+            <p style="margin-bottom:12px;color:#666">Aggregate tasks from multiple sources (text, documents, emails, Teams chats, transcripts), review the merged list, then create a Planner project in one click.</p>
+
+            <h3 style="font-size:0.95rem;margin-bottom:8px">Add Sources</h3>
+
+            <label for="wiz_source_type">Source Type</label>
+            <select id="wiz_source_type">
+                <option value="text">Free-form Text</option>
+                <option value="document">Upload Document (.txt, .docx, .pdf)</option>
+                <option value="email">Outlook Email (by Message ID)</option>
+                <option value="teams">Teams Chat (by Chat ID)</option>
+                <option value="transcript">Meeting Transcript (by Join URL)</option>
+            </select>
+
+            <div id="wiz_text_input">
+                <label for="wiz_text">Text</label>
+                <textarea id="wiz_text" style="min-height:80px" placeholder="Paste meeting notes, requirements, brainstorm..."></textarea>
+                <label for="wiz_text_context">Context (optional)</label>
+                <input type="text" id="wiz_text_context" placeholder="e.g. Sprint 3 planning">
+            </div>
+
+            <div id="wiz_doc_input" style="display:none">
+                <label for="wiz_doc_file">Document</label>
+                <input type="file" id="wiz_doc_file" accept=".txt,.docx,.pdf">
+            </div>
+
+            <div id="wiz_email_input" style="display:none">
+                <label for="wiz_email_id">Email Message ID</label>
+                <input type="text" id="wiz_email_id" placeholder="Paste Outlook message ID">
+            </div>
+
+            <div id="wiz_teams_input" style="display:none">
+                <label for="wiz_chat_id">Teams Chat ID</label>
+                <input type="text" id="wiz_chat_id" placeholder="Paste Teams chat ID">
+            </div>
+
+            <div id="wiz_transcript_input" style="display:none">
+                <label for="wiz_transcript_url">Meeting Join URL</label>
+                <input type="text" id="wiz_transcript_url" placeholder="Paste Teams meeting join link">
+                <label for="wiz_transcript_subject">Meeting Subject (optional)</label>
+                <input type="text" id="wiz_transcript_subject" placeholder="e.g. Sprint Review">
+            </div>
+
+            <div class="actions" style="margin-top:12px">
+                <button class="btn btn-secondary" onclick="wizAddSource()">+ Add Source</button>
+            </div>
+
+            <h3 style="font-size:0.95rem;margin:16px 0 8px">Queued Sources</h3>
+            <ul class="wizard-source-list" id="wizSourceList">
+                <li style="color:#999;border:none;background:none">No sources added yet</li>
+            </ul>
+
+            <label for="wiz_prefix">Ticket Prefix</label>
+            <input type="text" id="wiz_prefix" value="PRJ" style="width:100px">
+
+            <div class="actions" style="margin-top:16px">
+                <button class="btn btn-primary" onclick="wizExtract()">Extract &amp; Merge Tasks</button>
+            </div>
+
+            <div id="wizExtractStatus" class="status"></div>
+        </div>
+
+        <div id="wizPreview" style="display:none;margin-top:16px">
+            <div class="card">
+                <h3 style="font-size:1rem;margin-bottom:8px">Merged Tasks Preview</h3>
+                <div id="wizSourceSummary" style="font-size:0.85rem;color:#666;margin-bottom:12px"></div>
+                <div style="overflow-x:auto">
+                    <table class="preview-table" id="wizPreviewTable">
+                        <thead>
+                            <tr>
+                                <th>Ticket</th><th>Title</th><th>Epic</th><th>Bucket</th>
+                                <th>Priority</th><th>Assignee</th><th>Due Date</th><th>Checklist</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <hr style="margin:20px 0;border:none;border-top:1px solid #ddd">
+                <h3 style="font-size:1rem;margin-bottom:8px">Create Planner Project</h3>
+
+                <label for="wiz_group_id">Group</label>
+                <select id="wiz_group_id"><option value="">Loading groups...</option></select>
+
+                <label for="wiz_plan_title">Plan Title</label>
+                <input type="text" id="wiz_plan_title" placeholder="My New Project">
+
+                <div style="margin-top:12px">
+                    <label class="inline-label">
+                        <input type="checkbox" id="wiz_auto_buckets" checked> Auto-create buckets
+                    </label>
+                </div>
+
+                <div class="actions" style="margin-top:16px">
+                    <button class="btn btn-submit" onclick="wizCreateProject()">Create Project</button>
+                </div>
+
+                <div id="wizCreateStatus" class="status"></div>
+            </div>
+        </div>
+    </div>
+
+    {% endif %}
+</div>
+
+{% if user_id %}
+<script>
+// ========== TAB SWITCHING ==========
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+});
+
+// ========== SHARED: GROUP/PLAN CASCADE ==========
+async function loadGroupsInto(selectEl) {
+    const res = await fetch("/planner/groups");
+    if (!res.ok) return;
+    const groups = await res.json();
+    selectEl.innerHTML = '<option value="">Select a group</option>';
+    groups.forEach(g => {
+        const opt = document.createElement("option");
+        opt.value = g.id;
+        opt.textContent = g.displayName || g.id;
+        selectEl.appendChild(opt);
+    });
+}
+
+async function loadPlansInto(groupId, selectEl) {
+    selectEl.innerHTML = '<option value="">Loading...</option>';
+    if (!groupId) { selectEl.innerHTML = '<option value="">Select a group first</option>'; return; }
+    const res = await fetch(`/planner/plans?group_id=${groupId}`);
+    const plans = await res.json();
+    selectEl.innerHTML = '<option value="">Select a plan</option>';
+    plans.forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p.id;
+        opt.textContent = p.title;
+        selectEl.appendChild(opt);
+    });
+}
+
+async function loadBucketsInto(planId, selectEl) {
+    selectEl.innerHTML = '<option value="">Loading...</option>';
+    if (!planId) { selectEl.innerHTML = '<option value="">Select a plan first</option>'; return; }
+    const res = await fetch(`/planner/buckets?plan_id=${planId}`);
+    const buckets = await res.json();
+    selectEl.innerHTML = '<option value="">Select a bucket</option>';
+    buckets.forEach(b => {
+        const opt = document.createElement("option");
+        opt.value = b.id;
+        opt.textContent = b.name;
+        selectEl.appendChild(opt);
+    });
+}
+
+// ========== EXCEL TAB ==========
+const excelGroup = document.getElementById("excel_group_id");
+const excelPlan = document.getElementById("excel_plan_id");
+const excelBucket = document.getElementById("excel_bucket_id");
+
+excelGroup.addEventListener("change", () => {
+    loadPlansInto(excelGroup.value, excelPlan);
+    excelBucket.innerHTML = '<option value="">Select a plan first</option>';
+});
+excelPlan.addEventListener("change", () => loadBucketsInto(excelPlan.value, excelBucket));
+
+async function syncExcel() {
+    const statusBox = document.getElementById("excelStatus");
+    const resultsBox = document.getElementById("excelResults");
+    statusBox.className = "status"; statusBox.style.display = "none";
+    resultsBox.textContent = "";
+
+    const file = document.getElementById("excel_file").files[0];
+    if (!file || !excelPlan.value || !excelBucket.value) {
+        statusBox.className = "status error";
+        statusBox.textContent = "Please select a group, plan, bucket, and upload a file.";
+        return;
+    }
+
+    const form = new FormData();
+    form.append("file", file);
+    form.append("plan_id", excelPlan.value);
+    form.append("default_bucket_id", excelBucket.value);
+    form.append("sheet_as_bucket", document.getElementById("sheet_as_bucket").checked);
+
+    statusBox.className = "status warning"; statusBox.textContent = "Syncing...";
+
+    try {
+        const res = await fetch("/sync/excel-to-planner", { method: "POST", body: form });
+        const data = await res.json();
+        if (res.ok) {
+            statusBox.className = "status success";
+            statusBox.textContent = `Done: ${data.tasks_created} created, ${data.tasks_failed} failed out of ${data.total_rows} rows.`;
+            if (data.errors && data.errors.length > 0) resultsBox.textContent = data.errors.join("\n");
+        } else {
+            statusBox.className = "status error";
+            statusBox.textContent = data.detail || "Sync failed.";
+        }
+    } catch (err) {
+        statusBox.className = "status error";
+        statusBox.textContent = "Network error: " + err.message;
+    }
+}
+
+// ========== AI TAB ==========
+const aiGroup = document.getElementById("ai_group_id");
+const aiPlan = document.getElementById("ai_plan_id");
+let lastExtraction = null;
+
+aiGroup.addEventListener("change", () => loadPlansInto(aiGroup.value, aiPlan));
+
+document.getElementById("ai_input_mode").addEventListener("change", function() {
+    document.getElementById("ai_text_input").style.display = this.value === "text" ? "" : "none";
+    document.getElementById("ai_file_input").style.display = this.value === "file" ? "" : "none";
+});
+
+document.getElementById("ai_auto_plan").addEventListener("change", function() {
+    document.getElementById("ai_plan_title_row").style.display = this.checked ? "" : "none";
+});
+
+async function checkLLMHealth() {
+    const dot = document.getElementById("llmHealthDot");
+    const txt = document.getElementById("llmHealthText");
+    try {
+        const res = await fetch("/ai/health");
+        const data = await res.json();
+        if (data.available) {
+            dot.className = "health-dot ok";
+            txt.textContent = `${data.llm_provider} ready (${data.model})`;
+        } else {
+            dot.className = "health-dot fail";
+            txt.textContent = `${data.llm_provider} not available`;
+        }
+    } catch {
+        dot.className = "health-dot fail";
+        txt.textContent = "Cannot reach backend";
+    }
+}
+
+async function extractTasks() {
+    const statusBox = document.getElementById("aiExtractStatus");
+    const preview = document.getElementById("aiPreview");
+    statusBox.className = "status"; statusBox.style.display = "none";
+    preview.style.display = "none";
+    lastExtraction = null;
+
+    const mode = document.getElementById("ai_input_mode").value;
+    const context = document.getElementById("ai_context").value || undefined;
+    const prefix = document.getElementById("ai_prefix").value || "AI";
+
+    statusBox.className = "status warning"; statusBox.textContent = "Extracting tasks...";
+
+    try {
+        let res;
+        if (mode === "text") {
+            const text = document.getElementById("ai_text").value;
+            if (!text.trim()) {
+                statusBox.className = "status error";
+                statusBox.textContent = "Please enter some text.";
+                return;
+            }
+            res = await fetch("/ai/extract-tasks", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({ text, context, ticket_prefix: prefix }),
+            });
+        } else {
+            const file = document.getElementById("ai_file").files[0];
+            if (!file) {
+                statusBox.className = "status error";
+                statusBox.textContent = "Please upload a document.";
+                return;
+            }
+            const form = new FormData();
+            form.append("file", file);
+            if (context) form.append("context", context);
+            form.append("ticket_prefix", prefix);
+            res = await fetch("/ai/extract-from-document", { method: "POST", body: form });
+        }
+
+        const data = await res.json();
+        if (!res.ok) {
+            statusBox.className = "status error";
+            statusBox.textContent = data.detail || "Extraction failed.";
+            return;
+        }
+
+        lastExtraction = data;
+        if (data.plan_name) {
+            document.getElementById("ai_plan_title").value = data.plan_name;
+        }
+
+        // Populate preview table
+        const tbody = document.querySelector("#aiPreviewTable tbody");
+        tbody.innerHTML = "";
+        if (!data.tasks || data.tasks.length === 0) {
+            statusBox.className = "status error";
+            statusBox.textContent = "No tasks extracted from the input.";
+            return;
+        }
+        data.tasks.forEach(t => {
+            const tr = document.createElement("tr");
+            const pMap = {1:"Urgent",3:"High",5:"Medium",9:"Low"};
+            tr.innerHTML = `
+                <td>${esc(t.ticket_id)}</td>
+                <td>${esc(t.title)}</td>
+                <td>${esc(t.epic || "")}</td>
+                <td>${esc(t.bucket_name || "")}</td>
+                <td>${pMap[t.priority] || t.priority}</td>
+                <td>${esc(t.assignee || "")}</td>
+                <td>${esc(t.due_date || "")}</td>
+                <td>${(t.checklist_items||[]).length} items</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        statusBox.className = "status success";
+        statusBox.textContent = `Extracted ${data.tasks.length} tasks. Review below and sync when ready.`;
+        preview.style.display = "";
+    } catch (err) {
+        statusBox.className = "status error";
+        statusBox.textContent = "Error: " + err.message;
+    }
+}
+
+async function syncAiTasks() {
+    const statusBox = document.getElementById("aiSyncStatus");
+    statusBox.className = "status"; statusBox.style.display = "none";
+
+    if (!lastExtraction || !lastExtraction.tasks || lastExtraction.tasks.length === 0) {
+        statusBox.className = "status error";
+        statusBox.textContent = "No extracted tasks to sync. Run extraction first.";
+        return;
+    }
+
+    const groupId = aiGroup.value;
+    if (!groupId) {
+        statusBox.className = "status error";
+        statusBox.textContent = "Please select a group.";
+        return;
+    }
+
+    const autoCreatePlan = document.getElementById("ai_auto_plan").checked;
+    const planId = autoCreatePlan ? null : aiPlan.value;
+    if (!autoCreatePlan && !planId) {
+        statusBox.className = "status error";
+        statusBox.textContent = "Please select a plan or enable auto-create.";
+        return;
+    }
+
+    // Reconstruct the original text from extraction
+    const mode = document.getElementById("ai_input_mode").value;
+    const text = mode === "text" ? document.getElementById("ai_text").value : "(from document)";
+    const context = document.getElementById("ai_context").value || undefined;
+    const prefix = document.getElementById("ai_prefix").value || "AI";
+
+    statusBox.className = "status warning"; statusBox.textContent = "Syncing to Planner...";
+
+    try {
+        const res = await fetch("/ai/extract-and-sync", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                text,
+                context,
+                ticket_prefix: prefix,
+                group_id: groupId,
+                plan_id: planId,
+                plan_title: document.getElementById("ai_plan_title").value || undefined,
+                auto_create_plan: autoCreatePlan,
+                auto_create_buckets: document.getElementById("ai_auto_buckets").checked,
+            }),
+        });
+        const data = await res.json();
+        if (data.error) {
+            statusBox.className = "status error";
+            statusBox.textContent = data.error;
+            return;
+        }
+        if (data.sync) {
+            statusBox.className = "status success";
+            statusBox.textContent = `Done: ${data.sync.tasks_created} created, ${data.sync.tasks_failed} failed out of ${data.sync.total_rows} tasks.`;
+        } else {
+            statusBox.className = "status error";
+            statusBox.textContent = "Sync returned no result.";
+        }
+    } catch (err) {
+        statusBox.className = "status error";
+        statusBox.textContent = "Error: " + err.message;
+    }
+}
+
+// ========== REPORTS TAB ==========
+const rptGroup = document.getElementById("rpt_group_id");
+const rptPlan = document.getElementById("rpt_plan_id");
+
+rptGroup.addEventListener("change", () => loadPlansInto(rptGroup.value, rptPlan));
+
+function getSelectedFormat() {
+    return document.querySelector('input[name="rpt_format"]:checked').value;
+}
+
+async function downloadReport() {
+    const statusBox = document.getElementById("rptStatus");
+    statusBox.className = "status"; statusBox.style.display = "none";
+
+    if (!rptPlan.value) {
+        statusBox.className = "status error";
+        statusBox.textContent = "Please select a plan.";
+        return;
+    }
+
+    const fmt = getSelectedFormat();
+    statusBox.className = "status warning"; statusBox.textContent = "Generating report...";
+
+    try {
+        const res = await fetch(`/reports/plan-progress/${fmt}?plan_id=${rptPlan.value}`);
+        if (!res.ok) {
+            const data = await res.json();
+            statusBox.className = "status error";
+            statusBox.textContent = data.detail || "Report generation failed.";
+            return;
+        }
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `report.${fmt}`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        statusBox.className = "status success";
+        statusBox.textContent = "Report downloaded.";
+    } catch (err) {
+        statusBox.className = "status error";
+        statusBox.textContent = "Error: " + err.message;
+    }
+}
+
+async function previewReport() {
+    const statusBox = document.getElementById("rptStatus");
+    const resultsBox = document.getElementById("rptResults");
+    statusBox.className = "status"; statusBox.style.display = "none";
+    resultsBox.textContent = "";
+
+    if (!rptPlan.value) {
+        statusBox.className = "status error";
+        statusBox.textContent = "Please select a plan.";
+        return;
+    }
+
+    statusBox.className = "status warning"; statusBox.textContent = "Loading...";
+
+    try {
+        const res = await fetch(`/reports/plan-progress?plan_id=${rptPlan.value}`);
+        const data = await res.json();
+        if (!res.ok) {
+            statusBox.className = "status error";
+            statusBox.textContent = data.detail || "Failed.";
+            return;
+        }
+        statusBox.className = "status success";
+        statusBox.textContent = "Report data loaded.";
+        resultsBox.textContent = JSON.stringify(data, null, 2);
+    } catch (err) {
+        statusBox.className = "status error";
+        statusBox.textContent = "Error: " + err.message;
+    }
+}
+
+// ========== MEETINGS TAB ==========
+let selectedMeeting = null;
+let lastMeetingSummary = null;
+
+const mtgGroup = document.getElementById("mtg_group_id");
+const mtgPlan = document.getElementById("mtg_plan_id");
+const mtgBucket = document.getElementById("mtg_bucket_id");
+
+mtgGroup.addEventListener("change", () => {
+    loadPlansInto(mtgGroup.value, mtgPlan);
+    mtgBucket.innerHTML = '<option value="">Select a plan first</option>';
+});
+mtgPlan.addEventListener("change", () => loadBucketsInto(mtgPlan.value, mtgBucket));
+
+// Default date range: last 30 days
+{
+    const today = new Date();
+    const ago30 = new Date(today); ago30.setDate(ago30.getDate() - 30);
+    document.getElementById("mtg_before").value = today.toISOString().split("T")[0];
+    document.getElementById("mtg_after").value = ago30.toISOString().split("T")[0];
+}
+
+async function loadMeetings() {
+    const statusBox = document.getElementById("mtgStatus");
+    const list = document.getElementById("mtgList");
+    statusBox.className = "status"; statusBox.style.display = "none";
+    list.innerHTML = "";
+    selectedMeeting = null;
+    document.getElementById("mtgDetailPanel").style.display = "none";
+
+    const after = document.getElementById("mtg_after").value;
+    const before = document.getElementById("mtg_before").value;
+    let url = "/meetings/recent?limit=20";
+    if (after) url += `&after=${after}T00:00:00Z`;
+    if (before) url += `&before=${before}T23:59:59Z`;
+
+    statusBox.className = "status warning"; statusBox.textContent = "Loading meetings...";
+
+    try {
+        const res = await fetch(url);
+        const meetings = await res.json();
+        if (!res.ok) {
+            statusBox.className = "status error";
+            statusBox.textContent = meetings.detail || "Failed to load meetings.";
+            return;
+        }
+        if (meetings.length === 0) {
+            statusBox.className = "status warning";
+            statusBox.textContent = "No Teams meetings found in this date range.";
+            return;
+        }
+        statusBox.className = "status success";
+        statusBox.textContent = `Found ${meetings.length} Teams meeting(s).`;
+
+        meetings.forEach(m => {
+            const card = document.createElement("div");
+            card.className = "meeting-card";
+            const startDate = new Date(m.start).toLocaleString();
+            const attendees = m.attendees.filter(a => a).join(", ") || "No attendees";
+            card.innerHTML = `<div class="meeting-subject">${esc(m.subject)}</div>
+                <div class="meeting-meta">${startDate} &mdash; ${esc(attendees)}</div>`;
+            card.onclick = () => selectMeeting(m, card);
+            list.appendChild(card);
+        });
+    } catch (err) {
+        statusBox.className = "status error";
+        statusBox.textContent = "Error: " + err.message;
+    }
+}
+
+function selectMeeting(meeting, cardEl) {
+    document.querySelectorAll(".meeting-card").forEach(c => c.classList.remove("selected"));
+    cardEl.classList.add("selected");
+    selectedMeeting = meeting;
+    lastMeetingSummary = null;
+
+    document.getElementById("mtgDetailSubject").textContent = meeting.subject;
+    const startDate = new Date(meeting.start).toLocaleString();
+    const endDate = new Date(meeting.end).toLocaleString();
+    document.getElementById("mtgDetailMeta").textContent =
+        `${startDate} - ${endDate} | Organizer: ${meeting.organizer_name || meeting.organizer_email}`;
+    document.getElementById("mtgDetailPanel").style.display = "";
+    document.getElementById("mtgSummaryResult").style.display = "none";
+    document.getElementById("mtgSummaryStatus").className = "status";
+    document.getElementById("mtgSummaryStatus").style.display = "none";
+}
+
+async function summarizeMeeting() {
+    if (!selectedMeeting) return;
+    const statusBox = document.getElementById("mtgSummaryStatus");
+    statusBox.className = "status warning";
+    statusBox.textContent = "Fetching transcript and summarizing... (this may take a minute)";
+
+    try {
+        const res = await fetch("/meetings/summarize", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                join_url: selectedMeeting.join_url,
+                meeting_subject: selectedMeeting.subject,
+            }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            statusBox.className = "status error";
+            statusBox.textContent = data.detail || "Summarization failed.";
+            return;
+        }
+
+        lastMeetingSummary = data;
+        statusBox.className = "status success";
+        statusBox.textContent = `Summary generated. ${data.task_count} task(s) extracted.`;
+
+        // Render summary
+        let html = `<h4>Summary</h4><p>${esc(data.summary).replace(/\n/g, "<br>")}</p>`;
+        if (data.key_decisions && data.key_decisions.length) {
+            html += "<h4>Key Decisions</h4><ul>";
+            data.key_decisions.forEach(d => { html += `<li>${esc(d)}</li>`; });
+            html += "</ul>";
+        }
+        if (data.action_items && data.action_items.length) {
+            html += "<h4>Action Items</h4><ul>";
+            data.action_items.forEach(a => { html += `<li>${esc(a)}</li>`; });
+            html += "</ul>";
+        }
+        document.getElementById("mtgSummaryContent").innerHTML = html;
+        document.getElementById("mtgSummaryResult").style.display = "";
+
+        // Render tasks
+        const tasksSection = document.getElementById("mtgTasksSection");
+        if (data.tasks && data.tasks.length) {
+            const tbody = document.querySelector("#mtgTasksTable tbody");
+            tbody.innerHTML = "";
+            const pMap = {1:"Urgent",3:"High",5:"Medium",9:"Low"};
+            data.tasks.forEach(t => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `<td>${esc(t.ticket_id)}</td><td>${esc(t.title)}</td><td>${esc(t.epic||"")}</td><td>${esc(t.bucket_name||"")}</td><td>${pMap[t.priority]||t.priority}</td><td>${esc(t.assignee||"")}</td>`;
+                tbody.appendChild(tr);
+            });
+            tasksSection.style.display = "";
+        } else {
+            tasksSection.style.display = "none";
+        }
+    } catch (err) {
+        statusBox.className = "status error";
+        statusBox.textContent = "Error: " + err.message;
+    }
+}
+
+async function syncMeetingTasks() {
+    if (!selectedMeeting) return;
+    const statusBox = document.getElementById("mtgSyncStatus");
+    statusBox.className = "status"; statusBox.style.display = "none";
+
+    if (!mtgPlan.value || !mtgBucket.value) {
+        statusBox.className = "status error";
+        statusBox.textContent = "Please select a group, plan, and default bucket.";
+        return;
+    }
+
+    statusBox.className = "status warning"; statusBox.textContent = "Syncing tasks to Planner...";
+
+    try {
+        const res = await fetch("/meetings/summarize-and-sync", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                join_url: selectedMeeting.join_url,
+                meeting_subject: selectedMeeting.subject,
+                plan_id: mtgPlan.value,
+                default_bucket_id: mtgBucket.value,
+                auto_create_buckets: true,
+            }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            statusBox.className = "status error";
+            statusBox.textContent = data.detail || "Sync failed.";
+            return;
+        }
+        if (data.sync) {
+            statusBox.className = "status success";
+            statusBox.textContent = `Synced! ${data.sync.tasks_created} tasks created, ${data.sync.tasks_failed} failed.`;
+        } else {
+            statusBox.className = "status warning";
+            statusBox.textContent = "No tasks to sync.";
+        }
+    } catch (err) {
+        statusBox.className = "status error";
+        statusBox.textContent = "Error: " + err.message;
+    }
+}
+
+async function importToChat() {
+    if (!selectedMeeting) return;
+    // Create a chat session and import the transcript
+    const statusBox = document.getElementById("mtgSummaryStatus");
+    statusBox.className = "status warning";
+    statusBox.textContent = "Importing transcript to chat...";
+
+    try {
+        // Create new chat session
+        const sessRes = await fetch("/chat/sessions", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ title: `Meeting: ${selectedMeeting.subject}` }),
+        });
+        const sess = await sessRes.json();
+
+        // Import transcript
+        const importRes = await fetch(`/chat/sessions/${sess.id}/import-transcript`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                join_url: selectedMeeting.join_url,
+                meeting_subject: selectedMeeting.subject,
+            }),
+        });
+        const importData = await importRes.json();
+
+        if (!importRes.ok) {
+            statusBox.className = "status error";
+            statusBox.textContent = importData.detail || "Import failed.";
+            return;
+        }
+
+        statusBox.className = "status success";
+        statusBox.textContent = `Transcript imported to chat (${importData.chunk_count} chunks). Switching to Chat tab...`;
+
+        // Switch to chat tab and load the session
+        setTimeout(() => {
+            document.querySelector('[data-tab="chat"]').click();
+            currentSessionId = sess.id;
+            fetchChatSessions();
+            loadChatSession(sess.id);
+        }, 1000);
+
+    } catch (err) {
+        statusBox.className = "status error";
+        statusBox.textContent = "Error: " + err.message;
+    }
+}
+
+// ========== CHAT TAB ==========
+let currentSessionId = null;
+
+async function fetchChatSessions() {
+    try {
+        const res = await fetch("/chat/sessions");
+        if (!res.ok) return;
+        const sessions = await res.json();
+        const list = document.getElementById("chatSessionList");
+        list.innerHTML = "";
+        sessions.forEach(s => {
+            const div = document.createElement("div");
+            div.className = "session-item" + (s.id === currentSessionId ? " active" : "");
+            div.textContent = s.title || "New chat";
+            div.onclick = () => loadChatSession(s.id);
+            list.appendChild(div);
+        });
+    } catch {}
+}
+
+async function createChatSession() {
+    try {
+        const res = await fetch("/chat/sessions", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({}),
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        currentSessionId = data.id;
+        await fetchChatSessions();
+        clearChatMessages();
+        document.getElementById("chatEmpty").style.display = "none";
+    } catch {}
+}
+
+async function loadChatSession(sessionId) {
+    currentSessionId = sessionId;
+    fetchChatSessions();
+    clearChatMessages();
+    document.getElementById("chatEmpty").style.display = "none";
+    try {
+        const res = await fetch(`/chat/sessions/${sessionId}/messages`);
+        if (!res.ok) return;
+        const messages = await res.json();
+        messages.forEach(msg => {
+            appendChatBubble(msg.role, msg.content);
+            if (msg.pending_task_set) {
+                appendTaskApproval(msg.pending_task_set);
+            }
+        });
+    } catch {}
+}
+
+function clearChatMessages() {
+    const container = document.getElementById("chatMessages");
+    container.innerHTML = '<div class="chat-empty" id="chatEmpty" style="display:none"></div>';
+}
+
+function appendChatBubble(role, content) {
+    if (role === "system") return;
+    const container = document.getElementById("chatMessages");
+    const div = document.createElement("div");
+    div.className = "chat-msg " + role;
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    if (role === "assistant") {
+        bubble.innerHTML = renderMarkdown(content);
+    } else {
+        bubble.textContent = content;
+    }
+    div.appendChild(bubble);
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+}
+
+function renderMarkdown(text) {
+    // Strip out JSON action blocks from display
+    text = text.replace(/```json\s*\n?\{[\s\S]*?"action"\s*:[\s\S]*?```/g, "");
+    text = text.replace(/\{"action"\s*:\s*"extract_tasks"[\s\S]*?\}(?=\s|$)/g, "");
+    // Basic markdown
+    let html = esc(text);
+    html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
+    html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+    html = html.replace(/^- (.+)/gm, "&bull; $1");
+    html = html.replace(/^\d+\.\s+(.+)/gm, function(m, p1) { return "&bull; " + p1; });
+    html = html.replace(/\n/g, "<br>");
+    return html;
+}
+
+function appendTaskApproval(pts) {
+    const container = document.getElementById("chatMessages");
+    const box = document.createElement("div");
+    box.className = "task-approval-box";
+    box.id = "pts-" + pts.id;
+
+    let tasks;
+    try { tasks = JSON.parse(pts.tasks_json); } catch { tasks = []; }
+
+    let tableHtml = '<table class="preview-table"><thead><tr><th>Ticket</th><th>Title</th><th>Epic</th><th>Bucket</th><th>Priority</th></tr></thead><tbody>';
+    const pMap = {1:"Urgent",3:"High",5:"Medium",9:"Low"};
+    tasks.forEach(t => {
+        tableHtml += `<tr><td>${esc(t.ticket_id)}</td><td>${esc(t.title)}</td><td>${esc(t.epic||"")}</td><td>${esc(t.bucket_name||"")}</td><td>${pMap[t.priority]||t.priority}</td></tr>`;
+    });
+    tableHtml += '</tbody></table>';
+
+    if (pts.status === "pending") {
+        box.innerHTML = tableHtml + `
+            <div class="approval-actions">
+                <select id="pts-group-${pts.id}" style="width:auto"><option value="">Loading...</option></select>
+                <select id="pts-plan-${pts.id}" style="width:auto"><option value="">Select group</option></select>
+                <select id="pts-bucket-${pts.id}" style="width:auto"><option value="">Select plan</option></select>
+                <button class="btn btn-submit" onclick="approveTasks('${pts.id}')">Approve &amp; Sync</button>
+                <button class="btn btn-danger" onclick="rejectTasks('${pts.id}')">Reject</button>
+            </div>`;
+        container.appendChild(box);
+        // Load groups into the approval selects
+        const grpSel = document.getElementById(`pts-group-${pts.id}`);
+        const planSel = document.getElementById(`pts-plan-${pts.id}`);
+        const bucketSel = document.getElementById(`pts-bucket-${pts.id}`);
+        loadGroupsInto(grpSel);
+        grpSel.addEventListener("change", () => {
+            loadPlansInto(grpSel.value, planSel);
+            bucketSel.innerHTML = '<option value="">Select plan</option>';
+        });
+        planSel.addEventListener("change", () => loadBucketsInto(planSel.value, bucketSel));
+    } else {
+        box.innerHTML = tableHtml + `<p style="margin-top:8px;color:#666">Status: <strong>${pts.status}</strong></p>`;
+        container.appendChild(box);
+    }
+    container.scrollTop = container.scrollHeight;
+}
+
+async function sendChatMessage() {
+    if (!currentSessionId) {
+        await createChatSession();
+    }
+    const input = document.getElementById("chatInput");
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = "";
+
+    appendChatBubble("user", text);
+
+    // Create streaming assistant bubble
+    const container = document.getElementById("chatMessages");
+    const div = document.createElement("div");
+    div.className = "chat-msg assistant";
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.textContent = "...";
+    div.appendChild(bubble);
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+
+    let fullText = "";
+
+    try {
+        const res = await fetch(`/chat/sessions/${currentSessionId}/messages`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ content: text, plan_id: chatPlan.value || undefined }),
+        });
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+
+            const lines = buffer.split("\n");
+            buffer = lines.pop();
+
+            for (const line of lines) {
+                if (!line.startsWith("data: ")) continue;
+                const payload = line.slice(6).trim();
+                if (payload === "[DONE]") continue;
+                try {
+                    const evt = JSON.parse(payload);
+                    if (evt.type === "chunk") {
+                        fullText += evt.content;
+                        bubble.innerHTML = renderMarkdown(fullText);
+                        container.scrollTop = container.scrollHeight;
+                    } else if (evt.type === "tasks") {
+                        appendTaskApproval({ id: evt.pending_id, tasks_json: JSON.stringify(evt.tasks), status: "pending" });
+                    }
+                } catch {}
+            }
+        }
+    } catch (err) {
+        bubble.innerHTML = '<em style="color:#d13438">Error: ' + esc(err.message) + '</em>';
+    }
+
+    // Refresh session list (title may have been set)
+    fetchChatSessions();
+}
+
+async function approveTasks(pendingId) {
+    const grpSel = document.getElementById(`pts-group-${pendingId}`);
+    const planSel = document.getElementById(`pts-plan-${pendingId}`);
+    const bucketSel = document.getElementById(`pts-bucket-${pendingId}`);
+
+    if (!planSel.value || !bucketSel.value) {
+        alert("Please select a group, plan, and default bucket.");
+        return;
+    }
+
+    const box = document.getElementById("pts-" + pendingId);
+    const actions = box.querySelector(".approval-actions");
+    actions.innerHTML = '<span style="color:#8a6d3b">Syncing to Planner...</span>';
+
+    try {
+        const res = await fetch(`/chat/sessions/${currentSessionId}/tasks/${pendingId}/approve`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                plan_id: planSel.value,
+                default_bucket_id: bucketSel.value,
+                auto_create_buckets: true,
+            }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+            actions.innerHTML = `<span style="color:#107c10">Synced! ${data.sync_result.tasks_created} tasks created, ${data.sync_result.tasks_failed} failed.</span>`;
+        } else {
+            actions.innerHTML = `<span style="color:#d13438">${data.detail || "Approval failed."}</span>`;
+        }
+    } catch (err) {
+        actions.innerHTML = `<span style="color:#d13438">Error: ${esc(err.message)}</span>`;
+    }
+}
+
+async function rejectTasks(pendingId) {
+    const box = document.getElementById("pts-" + pendingId);
+    const actions = box.querySelector(".approval-actions");
+    try {
+        const res = await fetch(`/chat/sessions/${currentSessionId}/tasks/${pendingId}/reject`, { method: "POST" });
+        if (res.ok) {
+            actions.innerHTML = '<span style="color:#666">Rejected.</span>';
+        }
+    } catch {}
+}
+
+document.getElementById("chatFileInput").addEventListener("change", async function() {
+    if (!this.files.length) return;
+    if (!currentSessionId) await createChatSession();
+    const file = this.files[0];
+    this.value = "";
+
+    const form = new FormData();
+    form.append("file", file);
+
+    try {
+        appendChatBubble("user", `[Uploading: ${file.name}]`);
+        const res = await fetch(`/chat/sessions/${currentSessionId}/documents`, { method: "POST", body: form });
+        const data = await res.json();
+        if (res.ok) {
+            appendChatBubble("assistant", `Document "${data.filename}" uploaded and indexed (${data.chunk_count} chunks).`);
+        } else {
+            appendChatBubble("assistant", `Upload failed: ${data.detail || "Unknown error"}`);
+        }
+    } catch (err) {
+        appendChatBubble("assistant", `Upload error: ${err.message}`);
+    }
+});
+
+// ========== EMAIL & CHAT TAB ==========
+const ecGroup = document.getElementById("ec_group_id");
+const ecPlan = document.getElementById("ec_plan_id");
+const ecBucket = document.getElementById("ec_bucket_id");
+let ecSelectedEmailIds = new Set();
+let ecSelectedChatIds = new Set();
+let ecLastExtraction = null;
+
+ecGroup.addEventListener("change", () => {
+    loadPlansInto(ecGroup.value, ecPlan);
+    ecBucket.innerHTML = '<option value="">Select a plan first</option>';
+});
+ecPlan.addEventListener("change", () => loadBucketsInto(ecPlan.value, ecBucket));
+
+document.getElementById("ec_source").addEventListener("change", function() {
+    const src = this.value;
+    document.getElementById("ec_outlook_section").style.display = src === "outlook" ? "" : "none";
+    document.getElementById("ec_teams_section").style.display = src === "teams" ? "" : "none";
+    document.getElementById("ec_paste_section").style.display = src === "paste" ? "" : "none";
+    document.getElementById("ec_attachments_option").style.display = src === "paste" ? "none" : "";
+    ecSelectedEmailIds.clear();
+    ecSelectedChatIds.clear();
+    ecLastExtraction = null;
+    document.getElementById("ecPreview").style.display = "none";
+});
+
+async function loadInbox() {
+    const statusBox = document.getElementById("ecInboxStatus");
+    const list = document.getElementById("ecInboxList");
+    hideStatus(statusBox);
+    list.innerHTML = "";
+    ecSelectedEmailIds.clear();
+
+    let url = "/emails/inbox?top=30";
+    const after = document.getElementById("ec_email_after").value;
+    const before = document.getElementById("ec_email_before").value;
+    const search = document.getElementById("ec_email_search").value.trim();
+    if (after) url += `&after=${after}T00:00:00Z`;
+    if (before) url += `&before=${before}T23:59:59Z`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+
+    showStatus(statusBox, "warning", "Loading inbox...");
+
+    try {
+        const res = await fetch(url);
+        const messages = await res.json();
+        if (!res.ok) {
+            showStatus(statusBox, "error", messages.detail || "Failed to load inbox.");
+            return;
+        }
+        if (messages.length === 0) {
+            showStatus(statusBox, "warning", "No messages found.");
+            return;
+        }
+        showStatus(statusBox, "success", `Found ${messages.length} message(s). Click to select (multiple allowed).`);
+
+        messages.forEach(m => {
+            const card = document.createElement("div");
+            card.className = "meeting-card";
+            card.dataset.id = m.id;
+            const date = new Date(m.received_at).toLocaleString();
+            const attIcon = m.has_attachments ? ' 📎' : '';
+            card.innerHTML = `<div class="meeting-subject">${esc(m.subject)}${attIcon}</div>
+                <div class="meeting-meta">${esc(m.from_name)} &lt;${esc(m.from_email)}&gt; &mdash; ${date}</div>
+                <div style="font-size:0.8rem;color:#888;margin-top:4px">${esc(m.preview.substring(0, 120))}${m.preview.length > 120 ? '...' : ''}</div>`;
+            card.onclick = () => {
+                if (ecSelectedEmailIds.has(m.id)) {
+                    ecSelectedEmailIds.delete(m.id);
+                    card.classList.remove("selected");
+                } else {
+                    ecSelectedEmailIds.add(m.id);
+                    card.classList.add("selected");
+                }
+                const cnt = ecSelectedEmailIds.size;
+                showStatus(statusBox, "success", `${messages.length} message(s) loaded. ${cnt} selected.`);
+            };
+            list.appendChild(card);
+        });
+    } catch (err) {
+        showStatus(statusBox, "error", "Error: " + err.message);
+    }
+}
+
+async function loadTeamsChats() {
+    const statusBox = document.getElementById("ecChatStatus");
+    const list = document.getElementById("ecChatList");
+    hideStatus(statusBox);
+    list.innerHTML = "";
+    ecSelectedChatIds.clear();
+    document.getElementById("ecChatMessages").style.display = "none";
+
+    let url = "/teams-chat/chats?top=30";
+    const chatType = document.getElementById("ec_chat_type").value;
+    const search = document.getElementById("ec_chat_search").value.trim();
+    if (chatType) url += `&chat_type=${chatType}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+
+    showStatus(statusBox, "warning", "Loading chats...");
+
+    try {
+        const res = await fetch(url);
+        const chats = await res.json();
+        if (!res.ok) {
+            showStatus(statusBox, "error", chats.detail || "Failed to load chats.");
+            return;
+        }
+        if (chats.length === 0) {
+            showStatus(statusBox, "warning", "No chats found.");
+            return;
+        }
+        showStatus(statusBox, "success", `Found ${chats.length} chat(s). Click to select (multiple allowed).`);
+
+        chats.forEach(c => {
+            const card = document.createElement("div");
+            card.className = "meeting-card";
+            card.dataset.id = c.id;
+            const date = new Date(c.last_updated).toLocaleString();
+            const typeLabel = {oneOnOne: "1:1", group: "Group", meeting: "Meeting"}[c.chat_type] || c.chat_type;
+            card.innerHTML = `<div class="meeting-subject">${esc(c.topic)}</div>
+                <div class="meeting-meta">${typeLabel} &mdash; ${date}</div>`;
+            card.onclick = () => {
+                if (ecSelectedChatIds.has(c.id)) {
+                    ecSelectedChatIds.delete(c.id);
+                    card.classList.remove("selected");
+                } else {
+                    ecSelectedChatIds.add(c.id);
+                    card.classList.add("selected");
+                    loadTeamsChatMessages(c.id);
+                }
+                const cnt = ecSelectedChatIds.size;
+                showStatus(statusBox, "success", `${chats.length} chat(s) loaded. ${cnt} selected.`);
+            };
+            list.appendChild(card);
+        });
+    } catch (err) {
+        showStatus(statusBox, "error", "Error: " + err.message);
+    }
+}
+
+async function loadTeamsChatMessages(chatId) {
+    const msgBox = document.getElementById("ecChatMessages");
+    msgBox.style.display = "";
+    msgBox.innerHTML = "<em>Loading messages...</em>";
+
+    try {
+        const res = await fetch(`/teams-chat/chats/${chatId}/messages?top=50`);
+        const msgs = await res.json();
+        if (!res.ok) {
+            msgBox.innerHTML = `<em style="color:#d13438">${msgs.detail || "Failed to load messages."}</em>`;
+            return;
+        }
+        if (msgs.length === 0) {
+            msgBox.innerHTML = "<em>No messages in this chat.</em>";
+            return;
+        }
+        msgBox.innerHTML = msgs.map(m =>
+            `<div style="margin-bottom:6px"><strong>${esc(m.from_name)}:</strong> ${esc(m.content)}</div>`
+        ).join("");
+    } catch (err) {
+        msgBox.innerHTML = `<em style="color:#d13438">Error: ${esc(err.message)}</em>`;
+    }
+}
+
+async function ecExtractTasks() {
+    const statusBox = document.getElementById("ecExtractStatus");
+    const preview = document.getElementById("ecPreview");
+    hideStatus(statusBox);
+    preview.style.display = "none";
+    ecLastExtraction = null;
+
+    const source = document.getElementById("ec_source").value;
+    const includeAttachments = document.getElementById("ec_include_attachments")?.checked || false;
+
+    showStatus(statusBox, "warning", "Extracting tasks...");
+
+    try {
+        let res;
+        if (source === "outlook") {
+            const ids = Array.from(ecSelectedEmailIds);
+            if (ids.length === 0) {
+                showStatus(statusBox, "error", "Please select at least one email.");
+                return;
+            }
+            if (ids.length === 1 && !includeAttachments) {
+                res = await fetch(`/emails/${ids[0]}/extract?ticket_prefix=EM`, { method: "POST" });
+            } else {
+                res = await fetch("/emails/batch-extract", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        message_ids: ids,
+                        include_attachments: includeAttachments,
+                        ticket_prefix: "EM",
+                    }),
+                });
+            }
+        } else if (source === "teams") {
+            const ids = Array.from(ecSelectedChatIds);
+            if (ids.length === 0) {
+                showStatus(statusBox, "error", "Please select at least one chat.");
+                return;
+            }
+            if (ids.length === 1) {
+                const inclAtt = includeAttachments ? "&include_attachments=true" : "";
+                res = await fetch(`/teams-chat/chats/${ids[0]}/extract?ticket_prefix=TC${inclAtt}`, { method: "POST" });
+            } else {
+                res = await fetch("/teams-chat/chats/batch-extract", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        chat_ids: ids,
+                        ticket_prefix: "TC",
+                    }),
+                });
+            }
+        } else {
+            const body = document.getElementById("ec_paste_body").value;
+            if (!body.trim()) {
+                showStatus(statusBox, "error", "Please enter some text.");
+                return;
+            }
+            res = await fetch("/emails/extract-text", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    subject: document.getElementById("ec_paste_subject").value,
+                    body: body,
+                    ticket_prefix: "EM",
+                }),
+            });
+        }
+
+        const data = await res.json();
+        if (!res.ok) {
+            showStatus(statusBox, "error", data.detail || "Extraction failed.");
+            return;
+        }
+
+        ecLastExtraction = data;
+
+        const tbody = document.querySelector("#ecPreviewTable tbody");
+        tbody.innerHTML = "";
+        if (!data.tasks || data.tasks.length === 0) {
+            showStatus(statusBox, "error", "No tasks extracted.");
+            return;
+        }
+        const pMap = {1:"Urgent",3:"High",5:"Medium",9:"Low"};
+        data.tasks.forEach(t => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${esc(t.ticket_id)}</td>
+                <td>${esc(t.title)}</td>
+                <td>${esc(t.epic || "")}</td>
+                <td>${esc(t.bucket_name || "")}</td>
+                <td>${pMap[t.priority] || t.priority}</td>
+                <td>${esc(t.assignee || "")}</td>
+                <td>${esc(t.due_date || "")}</td>
+                <td>${(t.checklist_items||[]).length} items</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        let extraInfo = "";
+        if (data.source_count) extraInfo += ` from ${data.source_count} email(s)`;
+        if (data.chat_count) extraInfo += ` from ${data.chat_count} chat(s)`;
+        if (data.message_count) extraInfo += ` (${data.message_count} messages)`;
+        showStatus(statusBox, "success", `Extracted ${data.tasks.length} tasks${extraInfo}. Review below and sync when ready.`);
+        preview.style.display = "";
+    } catch (err) {
+        showStatus(statusBox, "error", "Error: " + err.message);
+    }
+}
+
+async function ecSyncTasks() {
+    const statusBox = document.getElementById("ecSyncStatus");
+    hideStatus(statusBox);
+
+    if (!ecLastExtraction || !ecLastExtraction.tasks || ecLastExtraction.tasks.length === 0) {
+        showStatus(statusBox, "error", "No extracted tasks to sync. Run extraction first.");
+        return;
+    }
+    if (!ecPlan.value || !ecBucket.value) {
+        statusBox.className = "status error";
+        statusBox.textContent = "Please select a group, plan, and default bucket.";
+        return;
+    }
+
+    const source = document.getElementById("ec_source").value;
+    showStatus(statusBox, "warning", "Syncing to Planner...");
+
+    try {
+        let res;
+        const emailIds = Array.from(ecSelectedEmailIds);
+        const chatIds = Array.from(ecSelectedChatIds);
+        if (source === "outlook" && emailIds.length > 0) {
+            res = await fetch("/emails/extract-and-sync", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    message_id: emailIds[0],
+                    plan_id: ecPlan.value,
+                    default_bucket_id: ecBucket.value,
+                    auto_create_buckets: document.getElementById("ec_auto_buckets").checked,
+                }),
+            });
+        } else if (source === "teams" && chatIds.length > 0) {
+            res = await fetch(`/teams-chat/chats/${chatIds[0]}/extract-and-sync`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    plan_id: ecPlan.value,
+                    default_bucket_id: ecBucket.value,
+                    auto_create_buckets: document.getElementById("ec_auto_buckets").checked,
+                }),
+            });
+        } else {
+            res = await fetch("/ai/extract-and-sync", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    text: document.getElementById("ec_paste_body").value,
+                    context: document.getElementById("ec_paste_subject").value || undefined,
+                    ticket_prefix: "EM",
+                    group_id: ecGroup.value,
+                    plan_id: ecPlan.value,
+                    auto_create_plan: false,
+                    auto_create_buckets: document.getElementById("ec_auto_buckets").checked,
+                }),
+            });
+        }
+
+        const data = await res.json();
+        if (!res.ok) {
+            showStatus(statusBox, "error", data.detail || data.error || "Sync failed.");
+            return;
+        }
+        const sync = data.sync || data;
+        if (sync.tasks_created !== undefined) {
+            showStatus(statusBox, "success", `Done: ${sync.tasks_created} tasks created, ${sync.tasks_failed || 0} failed.`);
+        } else {
+            showStatus(statusBox, "success", "Sync completed.");
+        }
+    } catch (err) {
+        showStatus(statusBox, "error", "Error: " + err.message);
+    }
+}
+
+async function ecImportToChat() {
+    const statusBox = document.getElementById("ecSyncStatus");
+    showStatus(statusBox, "warning", "Importing to chat...");
+
+    const source = document.getElementById("ec_source").value;
+
+    try {
+        const sessRes = await fetch("/chat/sessions", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ title: source === "outlook" ? "Email Import" : source === "teams" ? "Teams Chat Import" : "Text Import" }),
+        });
+        const sess = await sessRes.json();
+
+        let importRes;
+        const emailIds = Array.from(ecSelectedEmailIds);
+        const chatIds = Array.from(ecSelectedChatIds);
+        if (source === "outlook" && emailIds.length > 0) {
+            importRes = await fetch(`/chat/sessions/${sess.id}/import-email`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({ message_id: emailIds[0] }),
+            });
+        } else if (source === "teams" && chatIds.length > 0) {
+            importRes = await fetch(`/chat/sessions/${sess.id}/import-chat`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({ chat_id: chatIds[0] }),
+            });
+        } else {
+            const text = document.getElementById("ec_paste_body").value;
+            const blob = new Blob([text], { type: "text/plain" });
+            const form = new FormData();
+            form.append("file", blob, "pasted-text.txt");
+            importRes = await fetch(`/chat/sessions/${sess.id}/documents`, { method: "POST", body: form });
+        }
+
+        const importData = await importRes.json();
+        if (!importRes.ok) {
+            showStatus(statusBox, "error", importData.detail || "Import failed.");
+            return;
+        }
+
+        showStatus(statusBox, "success", `Imported to chat (${importData.chunk_count} chunks). Switching to Chat tab...`);
+
+        setTimeout(() => {
+            document.querySelector('[data-tab="chat"]').click();
+            currentSessionId = sess.id;
+            fetchChatSessions();
+            loadChatSession(sess.id);
+        }, 1000);
+    } catch (err) {
+        showStatus(statusBox, "error", "Error: " + err.message);
+    }
+}
+
+// ========== NL REPORTS ==========
+const nlGroup = document.getElementById("nl_group_id");
+const nlPlan = document.getElementById("nl_plan_id");
+
+nlGroup.addEventListener("change", () => loadPlansInto(nlGroup.value, nlPlan));
+
+async function generateNLReport() {
+    const statusBox = document.getElementById("nlStatus");
+    const resultBox = document.getElementById("nlReportResult");
+    hideStatus(statusBox);
+    resultBox.style.display = "none";
+    resultBox.textContent = "";
+
+    const planId = nlPlan.value;
+    const query = document.getElementById("nl_query").value.trim();
+
+    if (!planId) {
+        showStatus(statusBox, "error", "Please select a plan.");
+        return;
+    }
+    if (!query) {
+        showStatus(statusBox, "error", "Please enter a question.");
+        return;
+    }
+
+    showStatus(statusBox, "warning", "Generating report...");
+
+    try {
+        const res = await fetch("/reports/natural-language", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ plan_id: planId, query }),
+        });
+
+        if (!res.ok) {
+            const data = await res.json();
+            showStatus(statusBox, "error", data.detail || "Report generation failed.");
+            return;
+        }
+
+        resultBox.style.display = "";
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let fullText = "";
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+
+            const lines = buffer.split("\n");
+            buffer = lines.pop();
+
+            for (const line of lines) {
+                if (!line.startsWith("data: ")) continue;
+                const payload = line.slice(6).trim();
+                if (payload === "[DONE]") continue;
+                try {
+                    const evt = JSON.parse(payload);
+                    if (evt.type === "chunk") {
+                        fullText += evt.content;
+                        resultBox.innerHTML = renderMarkdown(fullText);
+                    }
+                } catch {}
+            }
+        }
+
+        showStatus(statusBox, "success", "Report generated.");
+    } catch (err) {
+        showStatus(statusBox, "error", "Error: " + err.message);
+    }
+}
+
+// ========== MEETING BOT ==========
+async function botJoinMeeting() {
+    const statusBox = document.getElementById("botStatus");
+    hideStatus(statusBox);
+
+    const joinUrl = document.getElementById("bot_join_url").value.trim();
+    if (!joinUrl) {
+        showStatus(statusBox, "error", "Please paste a Teams meeting join URL.");
+        return;
+    }
+
+    showStatus(statusBox, "warning", "Joining meeting...");
+
+    try {
+        const res = await fetch("/bot/join-meeting", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ join_url: joinUrl }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            showStatus(statusBox, "error", data.detail || "Failed to join meeting.");
+            return;
+        }
+        showStatus(statusBox, "success", `Bot joined! Connection: ${data.call_connection_id}`);
+        document.getElementById("bot_join_url").value = "";
+        botLoadActive();
+    } catch (err) {
+        showStatus(statusBox, "error", "Error: " + err.message);
+    }
+}
+
+async function botLoadActive() {
+    const container = document.getElementById("botActiveCalls");
+    container.innerHTML = "<em>Loading...</em>";
+
+    try {
+        const res = await fetch("/bot/active-calls");
+        const calls = await res.json();
+        if (!res.ok || calls.length === 0) {
+            container.innerHTML = "<em style='color:#999'>No active calls.</em>";
+            return;
+        }
+        container.innerHTML = "";
+        calls.forEach(c => {
+            const div = document.createElement("div");
+            div.className = "bot-card";
+            div.innerHTML = `
+                <div>
+                    <div style="font-weight:600;font-size:0.9rem">${esc(c.call_connection_id.substring(0, 20))}...</div>
+                    <div class="bot-info">Started: ${new Date(c.started_at).toLocaleString()} | Entries: ${c.entry_count}</div>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center">
+                    <span class="bot-status active">Active</span>
+                    <button class="btn btn-secondary" onclick="botViewTranscript('${c.call_connection_id}')" style="padding:6px 12px;font-size:0.8rem">Transcript</button>
+                    <button class="btn btn-danger" onclick="botLeave('${c.call_connection_id}')" style="padding:6px 12px;font-size:0.8rem">Leave</button>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    } catch (err) {
+        container.innerHTML = `<em style="color:#d13438">Error: ${esc(err.message)}</em>`;
+    }
+}
+
+async function botLeave(callConnectionId) {
+    const statusBox = document.getElementById("botStatus");
+    showStatus(statusBox, "warning", "Leaving meeting...");
+
+    try {
+        const res = await fetch("/bot/leave-meeting", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ call_connection_id: callConnectionId }),
+        });
+        if (res.ok) {
+            showStatus(statusBox, "success", "Bot left the meeting.");
+            botLoadActive();
+        } else {
+            const data = await res.json();
+            showStatus(statusBox, "error", data.detail || "Failed to leave.");
+        }
+    } catch (err) {
+        showStatus(statusBox, "error", "Error: " + err.message);
+    }
+}
+
+async function botViewTranscript(callConnectionId) {
+    const statusBox = document.getElementById("botStatus");
+    try {
+        const res = await fetch(`/bot/transcript/${callConnectionId}`);
+        const data = await res.json();
+        if (!res.ok) {
+            showStatus(statusBox, "error", data.detail || "Failed to get transcript.");
+            return;
+        }
+        const entries = data.entries || [];
+        if (entries.length === 0) {
+            showStatus(statusBox, "warning", "No transcript entries yet.");
+            return;
+        }
+        let text = entries.map(e => `[${e.speaker}] ${e.text}`).join("\n");
+        const w = window.open("", "_blank", "width=700,height=500");
+        w.document.write(`<pre style="font-family:monospace;padding:20px;white-space:pre-wrap">${esc(text)}</pre>`);
+        w.document.title = "Bot Transcript";
+    } catch (err) {
+        showStatus(statusBox, "error", "Error: " + err.message);
+    }
+}
+
+// ========== CHAT PLAN SELECTOR ==========
+const chatGroup = document.getElementById("chat_group_id");
+const chatPlan = document.getElementById("chat_plan_id");
+
+chatGroup.addEventListener("change", () => loadPlansInto(chatGroup.value, chatPlan));
+chatPlan.addEventListener("change", () => {
+    const hint = document.getElementById("chatPlanHint");
+    if (chatPlan.value) {
+        hint.textContent = "Task management enabled for this plan";
+        hint.style.color = "#107c10";
+    } else {
+        hint.textContent = "Select a plan for task management via chat";
+        hint.style.color = "#888";
+    }
+});
+
+// ========== WIZARD TAB ==========
+let wizSources = [];
+
+document.getElementById("wiz_source_type").addEventListener("change", function() {
+    document.getElementById("wiz_text_input").style.display = this.value === "text" ? "" : "none";
+    document.getElementById("wiz_doc_input").style.display = this.value === "document" ? "" : "none";
+    document.getElementById("wiz_email_input").style.display = this.value === "email" ? "" : "none";
+    document.getElementById("wiz_teams_input").style.display = this.value === "teams" ? "" : "none";
+    document.getElementById("wiz_transcript_input").style.display = this.value === "transcript" ? "" : "none";
+});
+
+function wizAddSource() {
+    const type = document.getElementById("wiz_source_type").value;
+    let source = null;
+
+    if (type === "text") {
+        const text = document.getElementById("wiz_text").value.trim();
+        if (!text) { alert("Please enter some text."); return; }
+        const context = document.getElementById("wiz_text_context").value.trim() || null;
+        source = { type: "text", label: `Text: ${text.substring(0, 40)}...`, data: { text, context } };
+        document.getElementById("wiz_text").value = "";
+        document.getElementById("wiz_text_context").value = "";
+    } else if (type === "document") {
+        const file = document.getElementById("wiz_doc_file").files[0];
+        if (!file) { alert("Please select a document."); return; }
+        source = { type: "document", label: `Doc: ${file.name}`, data: { file } };
+    } else if (type === "email") {
+        const id = document.getElementById("wiz_email_id").value.trim();
+        if (!id) { alert("Please enter an email message ID."); return; }
+        source = { type: "email", label: `Email: ${id.substring(0, 30)}...`, data: { message_id: id } };
+        document.getElementById("wiz_email_id").value = "";
+    } else if (type === "teams") {
+        const id = document.getElementById("wiz_chat_id").value.trim();
+        if (!id) { alert("Please enter a Teams chat ID."); return; }
+        source = { type: "teams", label: `Chat: ${id.substring(0, 30)}...`, data: { chat_id: id } };
+        document.getElementById("wiz_chat_id").value = "";
+    } else if (type === "transcript") {
+        const url = document.getElementById("wiz_transcript_url").value.trim();
+        if (!url) { alert("Please enter a meeting join URL."); return; }
+        const subject = document.getElementById("wiz_transcript_subject").value.trim() || null;
+        source = { type: "transcript", label: `Transcript: ${subject || url.substring(0, 30)}...`, data: { join_url: url, meeting_subject: subject } };
+        document.getElementById("wiz_transcript_url").value = "";
+        document.getElementById("wiz_transcript_subject").value = "";
+    }
+
+    if (source) {
+        wizSources.push(source);
+        wizRenderSources();
+    }
+}
+
+function wizRemoveSource(idx) {
+    wizSources.splice(idx, 1);
+    wizRenderSources();
+}
+
+function wizRenderSources() {
+    const list = document.getElementById("wizSourceList");
+    if (wizSources.length === 0) {
+        list.innerHTML = '<li style="color:#999;border:none;background:none">No sources added yet</li>';
+        return;
+    }
+    list.innerHTML = "";
+    wizSources.forEach((s, i) => {
+        const li = document.createElement("li");
+        li.innerHTML = `<span>${esc(s.label)}</span><span class="remove-src" onclick="wizRemoveSource(${i})">&#10005;</span>`;
+        list.appendChild(li);
+    });
+}
+
+async function wizExtract() {
+    const statusBox = document.getElementById("wizExtractStatus");
+    const preview = document.getElementById("wizPreview");
+    hideStatus(statusBox);
+    preview.style.display = "none";
+
+    if (wizSources.length === 0) {
+        showStatus(statusBox, "error", "Please add at least one source.");
+        return;
+    }
+
+    const prefix = document.getElementById("wiz_prefix").value || "PRJ";
+    showStatus(statusBox, "warning", "Extracting and merging tasks from all sources...");
+
+    try {
+        // Separate document uploads from structured sources
+        const docSources = wizSources.filter(s => s.type === "document");
+        const structuredSources = wizSources.filter(s => s.type !== "document");
+
+        let allTasks = [];
+        let allSourceSummaries = [];
+        let allErrors = [];
+
+        // Handle structured sources via /wizard/extract
+        if (structuredSources.length > 0) {
+            const body = { texts: [], emails: [], teams_chats: [], transcripts: [], ticket_prefix: prefix };
+            structuredSources.forEach(s => {
+                if (s.type === "text") body.texts.push(s.data);
+                else if (s.type === "email") body.emails.push(s.data);
+                else if (s.type === "teams") body.teams_chats.push(s.data);
+                else if (s.type === "transcript") body.transcripts.push(s.data);
+            });
+
+            const res = await fetch("/wizard/extract", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(body),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                showStatus(statusBox, "error", data.detail || "Extraction failed.");
+                return;
+            }
+            allTasks = allTasks.concat(data.tasks || []);
+            allSourceSummaries = allSourceSummaries.concat(data.sources || []);
+            allErrors = allErrors.concat(data.errors || []);
+        }
+
+        // Handle document uploads via /wizard/extract-document
+        for (const doc of docSources) {
+            const form = new FormData();
+            form.append("file", doc.data.file);
+            form.append("ticket_prefix", prefix);
+            const res = await fetch("/wizard/extract-document", { method: "POST", body: form });
+            const data = await res.json();
+            if (res.ok) {
+                allTasks = allTasks.concat(data.tasks || []);
+                allSourceSummaries.push({ label: data.source, task_count: data.task_count });
+            } else {
+                allErrors.push({ source: doc.label, error: data.detail || "Failed" });
+            }
+        }
+
+        if (allTasks.length === 0) {
+            showStatus(statusBox, "error", "No tasks extracted from any source." + (allErrors.length ? " Errors: " + allErrors.map(e => e.error).join("; ") : ""));
+            return;
+        }
+
+        // Store for project creation
+        window._wizTasks = allTasks;
+
+        // Render source summary
+        let summaryHtml = `<strong>${allTasks.length} tasks</strong> from ${allSourceSummaries.length} source(s): `;
+        summaryHtml += allSourceSummaries.map(s => `${esc(s.label)} (${s.task_count})`).join(", ");
+        if (allErrors.length) {
+            summaryHtml += `<br><span style="color:#d13438">${allErrors.length} error(s): ${allErrors.map(e => esc(e.error)).join("; ")}</span>`;
+        }
+        document.getElementById("wizSourceSummary").innerHTML = summaryHtml;
+
+        // Render task table
+        const tbody = document.querySelector("#wizPreviewTable tbody");
+        tbody.innerHTML = "";
+        const pMap = {1:"Urgent",3:"High",5:"Medium",9:"Low"};
+        allTasks.forEach(t => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${esc(t.ticket_id)}</td>
+                <td>${esc(t.title)}</td>
+                <td>${esc(t.epic || "")}</td>
+                <td>${esc(t.bucket_name || "")}</td>
+                <td>${pMap[t.priority] || t.priority}</td>
+                <td>${esc(t.assignee || "")}</td>
+                <td>${esc(t.due_date || "")}</td>
+                <td>${(t.checklist_items||[]).length} items</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        showStatus(statusBox, "success", `Extracted ${allTasks.length} tasks. Review below and create project when ready.`);
+        preview.style.display = "";
+    } catch (err) {
+        showStatus(statusBox, "error", "Error: " + err.message);
+    }
+}
+
+async function wizCreateProject() {
+    const statusBox = document.getElementById("wizCreateStatus");
+    hideStatus(statusBox);
+
+    const groupId = document.getElementById("wiz_group_id").value;
+    const planTitle = document.getElementById("wiz_plan_title").value.trim();
+
+    if (!groupId) {
+        showStatus(statusBox, "error", "Please select a group.");
+        return;
+    }
+    if (!planTitle) {
+        showStatus(statusBox, "error", "Please enter a plan title.");
+        return;
+    }
+    if (!window._wizTasks || window._wizTasks.length === 0) {
+        showStatus(statusBox, "error", "No tasks to create. Run extraction first.");
+        return;
+    }
+
+    showStatus(statusBox, "warning", "Creating Planner project...");
+
+    try {
+        const res = await fetch("/wizard/create-project", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                group_id: groupId,
+                plan_title: planTitle,
+                tasks_json: JSON.stringify(window._wizTasks),
+                auto_create_buckets: document.getElementById("wiz_auto_buckets").checked,
+            }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            showStatus(statusBox, "error", data.detail || "Project creation failed.");
+            return;
+        }
+        const sync = data.sync || {};
+        showStatus(statusBox, "success",
+            `Project "${data.plan_title}" created! ${sync.tasks_created || 0} tasks synced, ${sync.tasks_failed || 0} failed.`);
+    } catch (err) {
+        showStatus(statusBox, "error", "Error: " + err.message);
+    }
+}
+
+// ========== INIT ==========
+function esc(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+function showStatus(el, type, msg) { el.style.display = ""; el.className = "status " + type; el.textContent = msg; }
+function hideStatus(el) { el.className = "status"; el.style.display = "none"; }
+
+// Load groups into all tabs
+loadGroupsInto(excelGroup);
+loadGroupsInto(aiGroup);
+loadGroupsInto(rptGroup);
+loadGroupsInto(nlGroup);
+loadGroupsInto(mtgGroup);
+loadGroupsInto(ecGroup);
+loadGroupsInto(chatGroup);
+loadGroupsInto(document.getElementById("wiz_group_id"));
+
+// Check LLM health
+checkLLMHealth();
+
+// Load chat sessions
+fetchChatSessions();
+</script>
+{% endif %}
+</body>
+</html>
