@@ -9,54 +9,6 @@ resource "azurerm_container_app_environment" "main" {
   tags = var.tags
 }
 
-# ── Qdrant (internal only, always running) ─────────────────────────
-
-resource "azurerm_container_app" "qdrant" {
-  name                         = "${var.project_name}-qdrant"
-  container_app_environment_id = azurerm_container_app_environment.main.id
-  resource_group_name          = var.resource_group_name
-  revision_mode                = "Single"
-
-  template {
-    min_replicas = 1
-    max_replicas = 1
-
-    container {
-      name   = "qdrant"
-      image  = "qdrant/qdrant:latest"
-      cpu    = 0.5
-      memory = "1Gi"
-
-      env {
-        name  = "QDRANT__SERVICE__HTTP_PORT"
-        value = "6333"
-      }
-
-      volume_mounts {
-        name = "qdrant-storage"
-        path = "/qdrant/storage"
-      }
-    }
-
-    volume {
-      name         = "qdrant-storage"
-      storage_type = "EmptyDir"
-    }
-  }
-
-  ingress {
-    target_port      = 6333
-    external_enabled = false
-
-    traffic_weight {
-      percentage      = 100
-      latest_revision = true
-    }
-  }
-
-  tags = var.tags
-}
-
 # ── API (FastAPI backend) ──────────────────────────────────────────
 
 resource "azurerm_container_app" "api" {
@@ -159,11 +111,6 @@ resource "azurerm_container_app" "api" {
       env {
         name        = "GEMINI_API_KEY"
         secret_name = "gemini-api-key"
-      }
-
-      env {
-        name  = "QDRANT_URL"
-        value = "http://${azurerm_container_app.qdrant.name}.internal.${azurerm_container_app_environment.main.default_domain}:6333"
       }
 
       env {

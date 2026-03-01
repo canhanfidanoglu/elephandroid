@@ -24,8 +24,6 @@ class Settings(BaseSettings):
 
     # LLM provider: "ollama" | "claude" | "openai" | "gemini"
     llm_provider: str = "ollama"
-    # Embedding provider: "ollama" | "openai" | "gemini"
-    embedding_provider: str = "ollama"
 
     # Ollama (offline SLM)
     ollama_base_url: str = "http://localhost:11434"
@@ -39,12 +37,10 @@ class Settings(BaseSettings):
     # OpenAI
     openai_api_key: str = ""
     openai_model: str = "gpt-4o"
-    openai_embed_model: str = "text-embedding-3-small"
 
     # Google Gemini
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.0-flash"
-    gemini_embed_model: str = "text-embedding-004"
 
     # Azure Communication Services (meeting bot)
     acs_connection_string: str = ""
@@ -54,17 +50,8 @@ class Settings(BaseSettings):
     bot_app_id: str = ""
     bot_app_password: str = ""
 
-    # Qdrant (vector store)
-    qdrant_url: str = "http://localhost:6333"
-    qdrant_collection: str = "elephandroid_docs"
-    qdrant_hybrid_search: bool = True
-
-    # Embedding
-    ollama_embed_model: str = "nomic-embed-text"
-
     # Chat
     chat_max_history: int = 20
-    chat_context_chunks: int = 5
 
     # Stripe
     stripe_api_key: str = ""

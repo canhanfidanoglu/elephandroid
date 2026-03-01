@@ -10,8 +10,7 @@ Capabilities:
 - Update existing tasks (status, assignee, priority, dates)
 - Delete tasks
 - List current tasks and their status
-- Reference uploaded documents for context
-- Summarize meeting transcripts when provided
+- Answer questions based on current Planner task context
 
 ## ACTIONS
 
@@ -81,14 +80,6 @@ The following is the current task context (if provided):
 {{task_context}}
 
 Current date: {current_date}
-"""
-
-RAG_CONTEXT_TEMPLATE = """\
-The following document excerpts may be relevant to the user's question:
-
-{chunks}
-
-Use the above context to inform your response when relevant.
 """
 
 EXTRACTION_TRIGGER = """\

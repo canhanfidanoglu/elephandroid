@@ -6,7 +6,7 @@ import httpx
 
 from src.config import settings
 
-from .base import EmbeddingProvider, LLMProvider
+from .base import LLMProvider
 
 logger = logging.getLogger(__name__)
 
@@ -87,19 +87,3 @@ class OllamaLLMProvider(LLMProvider):
                 return resp.status_code == 200
         except Exception:
             return False
-
-
-class OllamaEmbeddingProvider(EmbeddingProvider):
-    @property
-    def dimension(self) -> int:
-        return 768
-
-    async def embed_text(self, text: str) -> list[float]:
-        async with httpx.AsyncClient(timeout=settings.ollama_timeout) as client:
-            resp = await client.post(
-                f"{settings.ollama_base_url}/api/embed",
-                json={"model": settings.ollama_embed_model, "input": text},
-            )
-            resp.raise_for_status()
-        data = resp.json()
-        return data["embeddings"][0]

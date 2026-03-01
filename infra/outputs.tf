@@ -10,11 +10,6 @@ output "frontend_url" {
   value       = "https://${module.container_apps.frontend_fqdn}"
 }
 
-output "qdrant_internal_fqdn" {
-  description = "Qdrant internal FQDN (only accessible within Container App Environment)"
-  value       = module.container_apps.qdrant_internal_fqdn
-}
-
 # ── Registry ───────────────────────────────────────────────────────
 
 output "registry_login_server" {

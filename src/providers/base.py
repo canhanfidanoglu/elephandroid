@@ -24,14 +24,3 @@ class LLMProvider(ABC):
     @abstractmethod
     def model_name(self) -> str:
         """Currently configured model name."""
-
-
-class EmbeddingProvider(ABC):
-    @abstractmethod
-    async def embed_text(self, text: str) -> list[float]:
-        """Return the embedding vector for the given text."""
-
-    @property
-    @abstractmethod
-    def dimension(self) -> int:
-        """Dimension of the embedding vectors."""

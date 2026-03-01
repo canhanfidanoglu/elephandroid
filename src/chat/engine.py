@@ -18,9 +18,8 @@ from .actions import (
     handle_list_tasks,
     handle_update_task,
 )
-from .models import ChatDocument, ChatMessage, ChatSession, PendingTaskSet
-from src.prompts import CHAT_SYSTEM, RAG_CONTEXT_TEMPLATE
-from .rag import search_relevant
+from .models import ChatMessage, ChatSession, PendingTaskSet
+from src.prompts import CHAT_SYSTEM
 from .streaming import extract_json_action
 
 logger = logging.getLogger(__name__)
@@ -49,24 +48,6 @@ async def _get_history(session_id: str, db: AsyncSession) -> list[dict]:
     rows = (await db.execute(stmt)).scalars().all()
     rows = list(reversed(rows))
     return [{"role": msg.role, "content": msg.content} for msg in rows]
-
-
-async def _has_documents(session_id: str, db: AsyncSession) -> bool:
-    stmt = select(ChatDocument.id).where(
-        ChatDocument.session_id == session_id
-    ).limit(1)
-    return (await db.execute(stmt)).scalar_one_or_none() is not None
-
-
-async def _build_rag_context(query: str) -> str | None:
-    """Search Qdrant and format context if results are found."""
-    results = await search_relevant(query)
-    if not results:
-        return None
-    chunk_texts = []
-    for r in results:
-        chunk_texts.append(f"[{r['filename']}] (score: {r['score']:.2f})\n{r['text']}")
-    return RAG_CONTEXT_TEMPLATE.format(chunks="\n\n---\n\n".join(chunk_texts))
 
 
 async def process_message(
@@ -100,27 +81,18 @@ async def process_message(
         task_context=task_context or "No plan selected.",
     )
 
-    # 3. RAG context if documents exist
-    has_docs = await _has_documents(session_id, db)
-    rag_prefix = ""
-    if has_docs:
-        rag_context = await _build_rag_context(user_message)
-        if rag_context:
-            rag_prefix = rag_context + "\n\n"
-
-    # 4. Build messages list
+    # 3. Build messages list
     messages = [{"role": "system", "content": system_prompt}]
     messages.extend(history)
-    final_user_content = rag_prefix + user_message
-    messages.append({"role": "user", "content": final_user_content})
+    messages.append({"role": "user", "content": user_message})
 
-    # 5. Stream response
+    # 4. Stream response
     full_response = ""
     async for chunk in stream_chat(messages):
         full_response += chunk
         yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
 
-    # 6. Save messages to DB
+    # 5. Save messages to DB
     user_msg = ChatMessage(
         session_id=session_id, role="user", content=user_message
     )
@@ -131,7 +103,7 @@ async def process_message(
     db.add(assistant_msg)
     await db.flush()
 
-    # 7. Detect and handle actions
+    # 6. Detect and handle actions
     action = extract_json_action(full_response)
     if action:
         action_type = action.get("action", "")
@@ -169,7 +141,7 @@ async def _handle_extract_tasks(
     message_id: str,
     db: AsyncSession,
 ) -> AsyncGenerator[str, None]:
-    """Handle extract_tasks action — parse tasks and create pending set."""
+    """Handle extract_tasks action -- parse tasks and create pending set."""
     raw_tasks = action.get("tasks", [])
     tasks: list[ParsedTask] = []
     for idx, item in enumerate(raw_tasks, start=1):

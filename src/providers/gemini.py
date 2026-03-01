@@ -7,15 +7,9 @@ from collections.abc import AsyncGenerator
 
 from src.config import settings
 
-from .base import EmbeddingProvider, LLMProvider
+from .base import LLMProvider
 
 logger = logging.getLogger(__name__)
-
-# Embedding dimensions for known models
-_EMBED_DIMENSIONS = {
-    "text-embedding-004": 768,
-    "embedding-001": 768,
-}
 
 
 def _get_client():
@@ -109,17 +103,3 @@ class GeminiLLMProvider(LLMProvider):
             return True
         except Exception:
             return False
-
-
-class GeminiEmbeddingProvider(EmbeddingProvider):
-    @property
-    def dimension(self) -> int:
-        return _EMBED_DIMENSIONS.get(settings.gemini_embed_model, 768)
-
-    async def embed_text(self, text: str) -> list[float]:
-        client = _get_client()
-        response = await client.aio.models.embed_content(
-            model=settings.gemini_embed_model,
-            contents=text,
-        )
-        return list(response.embeddings[0].values)

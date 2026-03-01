@@ -2,12 +2,11 @@ import logging
 
 from src.config import settings
 
-from .base import EmbeddingProvider, LLMProvider
+from .base import LLMProvider
 
 logger = logging.getLogger(__name__)
 
 _llm_instance: LLMProvider | None = None
-_embed_instance: EmbeddingProvider | None = None
 
 
 def get_llm_provider() -> LLMProvider:
@@ -46,33 +45,3 @@ def get_llm_provider() -> LLMProvider:
 
     logger.info("LLM provider: %s (%s)", _llm_instance.provider_name, _llm_instance.model_name)
     return _llm_instance
-
-
-def get_embedding_provider() -> EmbeddingProvider:
-    """Return a lazy singleton embedding provider based on settings.embedding_provider."""
-    global _embed_instance
-    if _embed_instance is not None:
-        return _embed_instance
-
-    provider = settings.embedding_provider.lower()
-
-    if provider == "ollama":
-        from .ollama import OllamaEmbeddingProvider
-        _embed_instance = OllamaEmbeddingProvider()
-
-    elif provider == "openai":
-        from .openai_provider import OpenAIEmbeddingProvider
-        _embed_instance = OpenAIEmbeddingProvider()
-
-    elif provider == "gemini":
-        from .gemini import GeminiEmbeddingProvider
-        _embed_instance = GeminiEmbeddingProvider()
-
-    else:
-        raise ValueError(
-            f"Unknown embedding provider: '{provider}'. "
-            "Supported: 'ollama', 'openai', 'gemini'"
-        )
-
-    logger.info("Embedding provider: %s (dim=%d)", provider, _embed_instance.dimension)
-    return _embed_instance

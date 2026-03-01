@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import DateTime, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.database import Base
@@ -33,19 +33,6 @@ class ChatMessage(Base):
     role: Mapped[str] = mapped_column(String(16))  # user / assistant / system
     content: Mapped[str] = mapped_column(Text)
     metadata_json: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-
-
-class ChatDocument(Base):
-    __tablename__ = "chat_documents"
-
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
-    session_id: Mapped[str | None] = mapped_column(
-        String(36), ForeignKey("chat_sessions.id"), nullable=True, index=True
-    )
-    filename: Mapped[str] = mapped_column(String(512))
-    content_hash: Mapped[str] = mapped_column(String(64))
-    chunk_count: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 

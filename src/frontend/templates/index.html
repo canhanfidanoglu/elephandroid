@@ -369,7 +369,6 @@
 
                 <div class="actions" style="margin-bottom:12px">
                     <button class="btn btn-primary" onclick="summarizeMeeting()">Summarize + Extract Tasks</button>
-                    <button class="btn btn-secondary" onclick="importToChat()" style="margin-left:8px">Import to Chat</button>
                 </div>
 
                 <div id="mtgSummaryStatus" class="status"></div>
@@ -427,8 +426,6 @@
                     <div class="chat-empty" id="chatEmpty">Select or create a chat session to begin.</div>
                 </div>
                 <div class="chat-input-bar">
-                    <input type="file" id="chatFileInput" style="display:none" accept=".txt,.docx,.pdf">
-                    <button class="upload-btn" title="Upload document" onclick="document.getElementById('chatFileInput').click()">&#128206;</button>
                     <input type="text" id="chatInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendChatMessage()">
                     <button class="btn btn-primary" onclick="sendChatMessage()">Send</button>
                 </div>
@@ -549,7 +546,6 @@
 
                 <div class="actions" style="margin-top:16px">
                     <button class="btn btn-submit" onclick="ecSyncTasks()">Sync to Planner</button>
-                    <button class="btn btn-secondary" onclick="ecImportToChat()" style="margin-left:8px">Import to Chat</button>
                 </div>
                 <div id="ecSyncStatus" class="status"></div>
             </div>
@@ -1227,55 +1223,6 @@ async function syncMeetingTasks() {
     }
 }
 
-async function importToChat() {
-    if (!selectedMeeting) return;
-    // Create a chat session and import the transcript
-    const statusBox = document.getElementById("mtgSummaryStatus");
-    statusBox.className = "status warning";
-    statusBox.textContent = "Importing transcript to chat...";
-
-    try {
-        // Create new chat session
-        const sessRes = await fetch("/chat/sessions", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({ title: `Meeting: ${selectedMeeting.subject}` }),
-        });
-        const sess = await sessRes.json();
-
-        // Import transcript
-        const importRes = await fetch(`/chat/sessions/${sess.id}/import-transcript`, {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({
-                join_url: selectedMeeting.join_url,
-                meeting_subject: selectedMeeting.subject,
-            }),
-        });
-        const importData = await importRes.json();
-
-        if (!importRes.ok) {
-            statusBox.className = "status error";
-            statusBox.textContent = importData.detail || "Import failed.";
-            return;
-        }
-
-        statusBox.className = "status success";
-        statusBox.textContent = `Transcript imported to chat (${importData.chunk_count} chunks). Switching to Chat tab...`;
-
-        // Switch to chat tab and load the session
-        setTimeout(() => {
-            document.querySelector('[data-tab="chat"]').click();
-            currentSessionId = sess.id;
-            fetchChatSessions();
-            loadChatSession(sess.id);
-        }, 1000);
-
-    } catch (err) {
-        statusBox.className = "status error";
-        statusBox.textContent = "Error: " + err.message;
-    }
-}
 
 // ========== CHAT TAB ==========
 let currentSessionId = null;
@@ -1524,28 +1471,6 @@ async function rejectTasks(pendingId) {
     } catch {}
 }
 
-document.getElementById("chatFileInput").addEventListener("change", async function() {
-    if (!this.files.length) return;
-    if (!currentSessionId) await createChatSession();
-    const file = this.files[0];
-    this.value = "";
-
-    const form = new FormData();
-    form.append("file", file);
-
-    try {
-        appendChatBubble("user", `[Uploading: ${file.name}]`);
-        const res = await fetch(`/chat/sessions/${currentSessionId}/documents`, { method: "POST", body: form });
-        const data = await res.json();
-        if (res.ok) {
-            appendChatBubble("assistant", `Document "${data.filename}" uploaded and indexed (${data.chunk_count} chunks).`);
-        } else {
-            appendChatBubble("assistant", `Upload failed: ${data.detail || "Unknown error"}`);
-        }
-    } catch (err) {
-        appendChatBubble("assistant", `Upload error: ${err.message}`);
-    }
-});
 
 // ========== EMAIL & CHAT TAB ==========
 const ecGroup = document.getElementById("ec_group_id");
@@ -1889,62 +1814,6 @@ async function ecSyncTasks() {
         } else {
             showStatus(statusBox, "success", "Sync completed.");
         }
-    } catch (err) {
-        showStatus(statusBox, "error", "Error: " + err.message);
-    }
-}
-
-async function ecImportToChat() {
-    const statusBox = document.getElementById("ecSyncStatus");
-    showStatus(statusBox, "warning", "Importing to chat...");
-
-    const source = document.getElementById("ec_source").value;
-
-    try {
-        const sessRes = await fetch("/chat/sessions", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({ title: source === "outlook" ? "Email Import" : source === "teams" ? "Teams Chat Import" : "Text Import" }),
-        });
-        const sess = await sessRes.json();
-
-        let importRes;
-        const emailIds = Array.from(ecSelectedEmailIds);
-        const chatIds = Array.from(ecSelectedChatIds);
-        if (source === "outlook" && emailIds.length > 0) {
-            importRes = await fetch(`/chat/sessions/${sess.id}/import-email`, {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({ message_id: emailIds[0] }),
-            });
-        } else if (source === "teams" && chatIds.length > 0) {
-            importRes = await fetch(`/chat/sessions/${sess.id}/import-chat`, {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({ chat_id: chatIds[0] }),
-            });
-        } else {
-            const text = document.getElementById("ec_paste_body").value;
-            const blob = new Blob([text], { type: "text/plain" });
-            const form = new FormData();
-            form.append("file", blob, "pasted-text.txt");
-            importRes = await fetch(`/chat/sessions/${sess.id}/documents`, { method: "POST", body: form });
-        }
-
-        const importData = await importRes.json();
-        if (!importRes.ok) {
-            showStatus(statusBox, "error", importData.detail || "Import failed.");
-            return;
-        }
-
-        showStatus(statusBox, "success", `Imported to chat (${importData.chunk_count} chunks). Switching to Chat tab...`);
-
-        setTimeout(() => {
-            document.querySelector('[data-tab="chat"]').click();
-            currentSessionId = sess.id;
-            fetchChatSessions();
-            loadChatSession(sess.id);
-        }, 1000);
     } catch (err) {
         showStatus(statusBox, "error", "Error: " + err.message);
     }

@@ -8,7 +8,6 @@ services:
       - .env
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
-      - QDRANT_URL=http://qdrant:6333
     volumes:
       - db-data:/app/data
       - ./src/frontend/templates:/app/src/frontend/templates
@@ -24,14 +23,6 @@ services:
       - "11434:11434"
     volumes:
       - ollama-data:/root/.ollama
-
-  qdrant:
-    image: qdrant/qdrant:latest
-    profiles: [ai]
-    ports:
-      - "6333:6333"
-    volumes:
-      - qdrant-data:/qdrant/storage
 
   # ── Production ────────────────────────────────────
   postgres:
@@ -51,14 +42,6 @@ services:
       timeout: 5s
       retries: 5
 
-  qdrant-prod:
-    image: qdrant/qdrant:latest
-    profiles: [production]
-    ports:
-      - "6333:6333"
-    volumes:
-      - qdrant-data:/qdrant/storage
-
   app-prod:
     build: .
     profiles: [production]
@@ -68,13 +51,10 @@ services:
       - .env
     environment:
       - DATABASE_URL=postgresql+asyncpg://elephandroid:${POSTGRES_PASSWORD:-elephandroid}@postgres:5432/elephandroid
-      - QDRANT_URL=http://qdrant-prod:6333
       - LOG_JSON=true
     depends_on:
       postgres:
         condition: service_healthy
-      qdrant-prod:
-        condition: service_started
 
   # ── Frontend ──────────────────────────────────────
   frontend:
@@ -89,5 +69,4 @@ services:
 volumes:
   db-data:
   ollama-data:
-  qdrant-data:
   pg-data:

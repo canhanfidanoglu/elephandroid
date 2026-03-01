@@ -4,16 +4,9 @@ from collections.abc import AsyncGenerator
 
 from src.config import settings
 
-from .base import EmbeddingProvider, LLMProvider
+from .base import LLMProvider
 
 logger = logging.getLogger(__name__)
-
-# Embedding dimensions for known models
-_EMBED_DIMENSIONS = {
-    "text-embedding-3-small": 1536,
-    "text-embedding-3-large": 3072,
-    "text-embedding-ada-002": 1536,
-}
 
 
 def _get_client():
@@ -76,17 +69,3 @@ class OpenAILLMProvider(LLMProvider):
             return True
         except Exception:
             return False
-
-
-class OpenAIEmbeddingProvider(EmbeddingProvider):
-    @property
-    def dimension(self) -> int:
-        return _EMBED_DIMENSIONS.get(settings.openai_embed_model, 1536)
-
-    async def embed_text(self, text: str) -> list[float]:
-        client = _get_client()
-        response = await client.embeddings.create(
-            model=settings.openai_embed_model,
-            input=text,
-        )
-        return response.data[0].embedding
